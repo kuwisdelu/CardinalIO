@@ -31,6 +31,12 @@ must_terms(obo = c("ims", "ms"),
 \arguments{
     \item{obo}{The ontology to get or use.}
 
+    \item{terms}{One or more ontology terms (either names or accessions) to check for validity in the ontology.}
+
+    \item{pattern}{The regular expression pattern to search in the ontology.}
+
+    \item{term}{An ontology term to partially match (by name, \emph{not} accession).}
+
     \item{\dots}{Additional arguments passed to \code{\link[ontologyIndex]{get_ontology}}) when first loading the ontology.}
 
     \item{check}{When validating terms, are they names ('name'), accession IDs ('accession') or either ('any')?}

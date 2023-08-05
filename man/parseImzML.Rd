@@ -1,7 +1,11 @@
 \name{parseImzML}
 
+\alias{class:ImzML}
+\alias{ImzML}
+\alias{ImzML-class}
+
 \alias{parseImzML}
-\alias{exampleIzMLPath}
+\alias{exampleImzMLPath}
 
 \title{Parse an imzML File}
 
@@ -27,6 +31,8 @@ exampleImzMLPath(type = c("continuous", "processed"))
     The parse imzML file is returned as a \code{ImzML} object, which is a list-like structure that can be travered via the standard \code{$}, \code{"["}, and \code{"[["} operators. Child nodes that contain cvParams and userParams will be \code{imzplist} objects which are also list-like structures that can be traversed the same way.
 
     The spectrum-level metadata is an exception and will be read in selectively and represented as \code{data.frame}s where each row contains the metadata for a specific spectrum. Metadata for \code{"positions"}, \code{"mzArrays"}, and \code{"intensityArrays"} will be parsed. These will be available in \code{$run$spectrumList}.
+
+    \code{exampleImzMLPath()} will return the local path to the tiny test imzML files originally downloaded from \url{https://ms-imaging.org/imzml/example-files-test/}.
 }
 
 \value{

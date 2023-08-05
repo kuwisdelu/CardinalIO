@@ -9,6 +9,8 @@ import("ontologyIndex")
 
 import("matter")
 
+importFrom("stats", "setNames")
+
 export(
 	"get_obo",
 	"valid_terms",
