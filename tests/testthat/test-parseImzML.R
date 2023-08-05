@@ -6,7 +6,7 @@ context("parseimzML")
 test_that("parseImzML - continuous", {
 
 	ims <- get_obo("ims")
-	path <- exampleImzMLPath("continuous")
+	path <- exampleImzMLFile("continuous")
 	p <- parseImzML(path)
 	fc <- p$fileDescription$fileContent
 	ss1 <- p$scanSettingsList[[1L]]
@@ -53,7 +53,7 @@ test_that("parseImzML - continuous", {
 test_that("parseImzML - processed", {
 
 	ims <- get_obo("ims")
-	path <- exampleImzMLPath("processed")
+	path <- exampleImzMLFile("processed")
 	p <- parseImzML(path)
 	fc <- p$fileDescription$fileContent
 	ss1 <- p$scanSettingsList[[1L]]

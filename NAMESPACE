@@ -22,7 +22,7 @@ exportClasses("ImzML")
 
 export(
 	"parseImzML",
-	"exampleImzMLPath")
+	"exampleImzMLFile")
 
 S3method("print", "imzplist")
 

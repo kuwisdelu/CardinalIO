@@ -1,0 +1,210 @@
+---
+title: "_CardinalIO_: Parsing imzML files"
+author: "Kylie Ariel Bemis"
+date: "Revised: August 5, 2023"
+output:
+    BiocStyle::html_document:
+    toc: true
+vignette: >
+    %\VignetteIndexEntry{1. CardinalIO: Parsing imzML files}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo=FALSE, results='asis'}
+BiocStyle::markdown()
+```
+
+# Introduction 
+
+*CardinalIO* provides fast and efficient parsing of imzML files for storage of mass spectrometry (MS) imaging experiments. It is intended to take over all file importing and exporting duties for the *Cardinal* package for MS imaging data analysis.
+
+The __imzML__ format is an open standard for long-term storage of MS imaging experimental data. Each MS imaging dataset is composed of two files: __(1) an XML metadata file ending in ".imzML"__ that contains experimental metadata and __(2) a binary data file ending in ".ibd"__ that contains the actual m/z and intensity arrays. The files are linked by a UUID. *__Both files must be present to successfully import an MS imaging dataset.__*
+
+The imzML specification is described in detail [here](https://ms-imaging.org/imzml/) along with example data files (two of which are included in this package). Software tools for converting vendor formats to imzML can be found [here](https://ms-imaging.org/imzml/software-tools/). A Java-based imzML validator is available [here](https://gitlab.com/imzML/imzMLValidator/-/wikis/latest). A web-based imzML validator is available [here](https://imzml.github.io).
+
+
+
+
+# Installation
+
+*CardinalIO* can be installed via the *BiocManager* package.
+
+```{r install, eval=FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("CardinalIO")
+```
+
+The same function can be used to update *CardinalIO* and other Bioconductor packages.
+
+Once installed, *CardinalIO* can be loaded with `library()`:
+
+```{r library}
+library(CardinalIO)
+```
+
+
+
+
+# Structure of imzML files
+
+Valid imzML datasets are composed of two files (".imzML" and ".ibd") and come in two types: "continuous" and "processed".
+
+## XML
+
+The XML (".imzML") file contains only human-readable experimental metadata in a structured plain text format using a controlled vocabulary. It can include many experimental details including sample preparation, instrument configuration, scan settings, etc. Note that a imzML file is also a valid mzML file, with additional requirements and constraints to accomodate the imaging modality.
+
+## Binary
+
+The binary data (".ibd") file contains the binary m/z and intensity arrays. The structure of these files is defined by metadata in the XML file. Two arrangements of the internal binary data arrays are possible depending on the type of imzML file ("continuous" or "processed").
+
+![A visualization of the imzML format as described below](imzml.png)
+
+## Continuous
+
+For "continuous" imzML files, all mass spectra share the same m/z values. Therefore, the m/z array is stored only once in the binary data file.
+
+## Processed
+
+For "processed" imzML files, each mass spectrum has its own unique set of m/z values. Therefore, each m/z array is stored with its corresponding intensity array. This format is common for high mass resolution experiments where it would be prohibitive to store the complete profile spectrum, so the profile spectra are stored sparsely.
+
+## Additional notes
+
+Note that *both* imzML types may contain *either* profile *or* centroided spectra. The spectrum representation should be specified in the imzML metadata file. Further note that despite the name, the "processed" type does *not* imply that any spectral processing has been performed beyond basic processing performed by the instrument.
+
+
+
+
+# Parsing imzML files
+
+Parsing imzML files is performed with `parseImzML()`.
+
+```{r parse}
+path <- exampleImzMLFile("continuous")
+
+p <- parseImzML(path)
+
+p
+```
+
+The resulting `ImzML` object is like a list, and can be traversed in the same way using the standard `$`, `[` and `[[` operators.
+
+
+
+## Experimental metadata
+
+The experimental metadata is stored in a recursive list structure that closely resembles the XML hierarchy.
+
+### File description
+
+The `fileDescription` element contains basic information about the file's contents and provenance.
+
+```{r fileDescription}
+p$fileDescription
+```
+
+For example, the cvParam tag below indicates that this imzML file has the "continuous" storage type.
+
+```{r fileContent-continuous}
+p$fileDescription$fileContent[["IMS:1000030"]]
+```
+
+### Scan settings
+
+If available, the `scanSettingsList` element contains a list of scan settings that should include information about the image rastering.
+
+```{r scanSettings}
+p$scanSettingsList
+```
+
+The "top down", "flyback", "horizontal line scan", and "linescan left right" terms describe the raster pattern for how the spectra were acquired.
+
+### Software
+
+The `softwareList` element contains information about any software that have been used with the data, including both software to control the acquisition of spectra and software to perform data processing.
+
+```{r softwareList}
+p$softwareList
+```
+
+### Instrument configuration
+
+The `instrumentConfigurationList` element contains information about the instrument(s) used to acquire the data.
+
+```{r instrumentConfigurationList}
+p$instrumentConfigurationList
+```
+
+Each instrument configuration should include a component list that describes the ion source, mass analyzer, and detector used.
+
+```{r instrumentConfiguration-componentList}
+p$instrumentConfigurationList$LTQFTUltra0$componentList
+```
+
+### Data processing
+
+The `dataProcessingList` element contains information about any data processing performed and a reference to the software used to do it.
+
+```{r dataProcessingList}
+p$dataProcessingList
+```
+
+
+
+
+## Spectrum metadata
+
+The spectrum metadata is the largest part of the imzML file, and therefore is rarely fully parsed. Many tags in this section are either repeated or unnecessary (and can be safely disregarded) or can be inferred from other tags.
+
+Unlike the experimental metadata, the spectrum metadata are stored as data frames, with a row for each spectrum, rather than in a recursive structure like the original XML.
+
+All data frames are stored in the `spectrumList` element inside the `run` element.
+
+Specifically, data frames for `positions`, `mzArrays`, and `intensityArrays` are returned.
+
+Note that no type coercion is performed for the parsed values (they are still strings), so numeric values must be coerced by the user.
+
+
+### Positions
+
+```{r spectrum-positions}
+p$run$spectrumList$positions
+```
+
+The `positions` element gives the pixel x/y-coordinates for each spectrum. The z-coordinates are also available, but rarely used.
+
+
+### m/z arrays
+
+```{r spectrum-mzArrays}
+p$run$spectrumList$mzArrays
+```
+
+The `mzArrays` element gives information about the locations and storage format of the m/z arrays in the ".ibd" binary data file.
+
+Note that for a "continuous" imzML file (like the one here), each of the rows actually points to the same m/z array. For a "processed" imzML file, each row would point to a different m/z array.
+
+
+
+### Intensity arrays
+
+```{r spectrum-intensityArrays}
+p$run$spectrumList$intensityArrays
+```
+
+The `intensityArrays` element gives information about the locations and storage format of the intensity arrays in the ".ibd" binary data file.
+
+Note that for a "continuous" imzML file (like the one here), each of the binary data arrays has the same length. For a "processed" imzML file, each spectrum (and therefore the corresponding binary data arrays) could have a different length.
+
+
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+
+

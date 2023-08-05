@@ -5,7 +5,7 @@
 \alias{ImzML-class}
 
 \alias{parseImzML}
-\alias{exampleImzMLPath}
+\alias{exampleImzMLFile}
 
 \title{Parse an imzML File}
 
@@ -16,7 +16,7 @@
 \usage{
 parseImzML(file, \dots)
 
-exampleImzMLPath(type = c("continuous", "processed"))
+exampleImzMLFile(type = c("continuous", "processed"))
 }
 
 \arguments{
@@ -32,7 +32,7 @@ exampleImzMLPath(type = c("continuous", "processed"))
 
     The spectrum-level metadata is an exception and will be read in selectively and represented as \code{data.frame}s where each row contains the metadata for a specific spectrum. Metadata for \code{"positions"}, \code{"mzArrays"}, and \code{"intensityArrays"} will be parsed. These will be available in \code{$run$spectrumList}.
 
-    \code{exampleImzMLPath()} will return the local path to the tiny test imzML files originally downloaded from \url{https://ms-imaging.org/imzml/example-files-test/}.
+    \code{exampleImzMLFile()} will return the local path to the tiny test imzML files originally downloaded from \url{https://ms-imaging.org/imzml/example-files-test/}.
 }
 
 \value{
@@ -43,7 +43,7 @@ exampleImzMLPath(type = c("continuous", "processed"))
 
 \examples{
 # get the path to an example imzML file
-path <- exampleImzMLPath()
+path <- exampleImzMLFile()
 
 # parse the file
 p <- parseImzML(path)

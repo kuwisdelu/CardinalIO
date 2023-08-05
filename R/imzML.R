@@ -1,5 +1,5 @@
 
-#### imzML class ####
+#### ImzML class ####
 ## --------------------
 
 setClass("ImzML", contains = "SimpleList")
@@ -155,7 +155,7 @@ parseImzML <- function(file, ...)
 	parse
 }
 
-exampleImzMLPath <- function(type = c("continuous", "processed"))
+exampleImzMLFile <- function(type = c("continuous", "processed"))
 {
 	path <- switch(match.arg(type),
 		continuous="extdata/Example_Continuous_imzML1.1.1/Example_Continuous.imzML",
