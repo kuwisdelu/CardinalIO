@@ -47,5 +47,8 @@ test_that("obo", {
 		find_term("external encoded length", "ims"),
 		ims$name["IMS:1000104"])
 
+	expect_error(find_term("position"))
+	expect_error(find_term(c("position x", "position y")))
+
 })
 

@@ -17,9 +17,9 @@ get_obo <- function(obo = c("ims", "ms", "uo"), ...)
 valid_terms <- function(terms, obo = c("ims", "ms", "uo"),
 	check = c("any", "name", "accession"))
 {
-	obo <- get_obo(match.arg(obo))
-	test_id <- terms %in% obo$id
-	test_name <- terms %in% obo$name
+	index <- get_obo(match.arg(obo))
+	test_id <- terms %in% index$id
+	test_name <- terms %in% index$name
 	test <- switch(match.arg(check),
 		any=test_id | test_name,
 		name=test_name,
@@ -31,8 +31,8 @@ find_terms <- function(pattern, obo = c("ims", "ms", "uo"),
 	value = c("name", "accession"))
 {
 	value <- match.arg(value)
-	obo <- get_obo(match.arg(obo))
-	terms <- grep(pattern, obo$name, value=TRUE)
+	index <- get_obo(match.arg(obo))
+	terms <- grep(pattern, index$name, value=TRUE)
 	switch(match.arg(value),
 		name=terms, accession=setNames(names(terms), terms))
 }
@@ -40,8 +40,13 @@ find_terms <- function(pattern, obo = c("ims", "ms", "uo"),
 find_term <- function(term, obo = c("ims", "ms", "uo"),
 	value = c("name", "accession"))
 {
-	obo <- get_obo(match.arg(obo))
-	term <- obo$name[pmatch(term, obo$name)]
+	obo <- match.arg(obo)
+	index <- get_obo(obo)
+	term <- index$name[pmatch(term, index$name)]
+	if ( !all(valid_terms(term, obo)) )
+		stop("could not resolve to a valid term ")
+	if ( length(term) != 1L )
+		stop("attempt to resolve more than one term")
 	switch(match.arg(value),
 		name=term, accession=setNames(names(term), term))
 }
@@ -52,10 +57,10 @@ must_terms <- function(obo = c("ims", "ms"), value = c("name", "accession"))
 	terms <- switch(obo,
 		ims=.must_msi_terms,
 		ms=.must_ms_terms)
-	obo <- get_obo(obo)
+	index <- get_obo(obo)
 	switch(match.arg(value),
-		name=obo$name[terms],
-		accession=obo$id[terms])
+		name=index$name[terms],
+		accession=index$id[terms])
 }
 
 .ontology_index <- new.env()
@@ -66,7 +71,7 @@ must_terms <- function(obo = c("ims", "ms"), value = c("name", "accession"))
 	fileContent = "IMS:1000009", # "ibd checksum"
 	fileContent = "IMS:1000008", # "ibd identification"
 	# scan settings
-	scanSettings = "IMS:1000040", # "linescan sequence"	(previously "scan direction")
+	scanSettings = "IMS:1000040", # "linescan sequence" (previously "scan direction")
 	scanSettings = "IMS:1000041", # "scan pattern"
 	scanSettings = "IMS:1000048", # "scan type"
 	scanSettings = "IMS:1000049", # "line scan direction"
@@ -74,7 +79,7 @@ must_terms <- function(obo = c("ims", "ms"), value = c("name", "accession"))
 	scanSettings = "IMS:1000043", # "max count of pixels y"
 	scanSettings = "IMS:1000044", # "max dimension x"
 	scanSettings = "IMS:1000045", # "max dimension y"
-	scanSettings = "IMS:1000046", # "pixel size (x)"		(previously "pixel size")
+	scanSettings = "IMS:1000046", # "pixel size (x)" (previously "pixel size")
 	# scan
 	scan = "IMS:1000050", # "position x"
 	scan = "IMS:1000051", # "position y"
