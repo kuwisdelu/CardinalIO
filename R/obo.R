@@ -43,25 +43,20 @@ find_term <- function(term, obo = c("ims", "ms", "uo"), ...)
 	"IMS:1000009" = "ibd checksum",
 	"IMS:1000008" = "ibd identification",
 	# scan settings
-	"IMS:1000042" = "max count of pixels x",
-	"IMS:1000043" = "max count of pixels y",
-	"IMS:1000046" = "pixel size (x)",
-	# scan
-	"IMS:1000050" = "position x",
-	"IMS:1000051" = "position y",
-	# spectrum binary data array
-	"IMS:1000102" = "external offset",
-	"IMS:1000103" = "external array length",
-	"IMS:1000104" = "external encoded length")
-
-.should_msi_terms <- c(
-	# scan settings
 	"IMS:1000040" = "scan direction",
 	"IMS:1000041" = "scan pattern",
 	"IMS:1000048" = "scan type",
 	"IMS:1000049" = "line scan direction",
-	"IMS:1000044" = "max dimension x",
-	"IMS:1000045" = "max dimension y")
+	"IMS:1000042" = "max count of pixels x",
+	"IMS:1000043" = "max count of pixels y",
+	# scan
+	"IMS:1000050" = "position x",
+	"IMS:1000051" = "position y",
+	# spectrum binary data array
+	"IMS:1000101" = "external data",
+	"IMS:1000102" = "external offset",
+	"IMS:1000103" = "external array length",
+	"IMS:1000104" = "external encoded length")
 
 .must_ms_terms <- c(
 	# file content
