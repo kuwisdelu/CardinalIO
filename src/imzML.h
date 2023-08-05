@@ -238,7 +238,7 @@ class imzML {
 		SEXP get_cvParam(pugi::xml_node node)
 		{
 			SEXP tag, tagNames;
-			size_t n = 2; // NEED accession, name
+			size_t n = 3; // NEED cvRef, accession, name
 			if ( node.attribute("value") )
 				n++;
 			if ( node.attribute("unitAccession") )
@@ -246,9 +246,11 @@ class imzML {
 			int i = 0, j = 0;
 			PROTECT(tag = Rf_allocVector(STRSXP, n));
 			PROTECT(tagNames = Rf_allocVector(STRSXP, n));
+			SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("cvRef").value()));
+			SET_STRING_ELT(tagNames, j++, Rf_mkChar("cv"));
 			SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("accession").value()));
-			SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("name").value()));
 			SET_STRING_ELT(tagNames, j++, Rf_mkChar("id"));
+			SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("name").value()));
 			SET_STRING_ELT(tagNames, j++, Rf_mkChar("name"));
 			if ( node.attribute("value") ) {
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("value").value()));

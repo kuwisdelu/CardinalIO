@@ -51,7 +51,7 @@ find_term <- function(term, obo = c("ims", "ms", "uo"), ...)
 	"IMS:1000043" = "max count of pixels y",
 	"IMS:1000044" = "max dimension x",
 	"IMS:1000045" = "max dimension y",
-	"IMS:1000046" = "pixel size (x)"
+	"IMS:1000046" = "pixel size (x)",
 	# scan
 	"IMS:1000050" = "position x",
 	"IMS:1000051" = "position y",
