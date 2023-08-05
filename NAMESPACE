@@ -13,7 +13,8 @@ export(
 	"get_obo",
 	"valid_terms",
 	"find_terms",
-	"find_term")
+	"find_term",
+	"must_terms")
 
 exportClasses("ImzML")
 

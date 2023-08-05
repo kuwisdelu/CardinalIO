@@ -14,77 +14,100 @@ get_obo <- function(obo = c("ims", "ms", "uo"), ...)
 	.ontology_index[[obo]]
 }
 
-valid_terms <- function(terms, obo = c("ims", "ms", "uo"), ...)
+valid_terms <- function(terms, obo = c("ims", "ms", "uo"),
+	check = c("any", "name", "accession"))
 {
 	obo <- get_obo(match.arg(obo))
 	test_id <- terms %in% obo$id
 	test_name <- terms %in% obo$name
-	test <- test_id | test_name
+	test <- switch(match.arg(check),
+		any=test_id | test_name,
+		name=test_name,
+		accession=test_id)
 	setNames(test, terms)
 }
 
-find_terms <- function(pattern, obo = c("ims", "ms", "uo"), ...)
+find_terms <- function(pattern, obo = c("ims", "ms", "uo"),
+	value = c("name", "accession"))
 {
+	value <- match.arg(value)
 	obo <- get_obo(match.arg(obo))
-	grep(pattern, obo$name, value=TRUE)
+	terms <- grep(pattern, obo$name, value=TRUE)
+	switch(match.arg(value),
+		name=terms, accession=setNames(names(terms), terms))
 }
 
-find_term <- function(term, obo = c("ims", "ms", "uo"), ...)
+find_term <- function(term, obo = c("ims", "ms", "uo"),
+	value = c("name", "accession"))
 {
 	obo <- get_obo(match.arg(obo))
-	obo$name[pmatch(term, obo$name)]
+	term <- obo$name[pmatch(term, obo$name)]
+	switch(match.arg(value),
+		name=term, accession=setNames(names(term), term))
+}
+
+must_terms <- function(obo = c("ims", "ms"), value = c("name", "accession"))
+{
+	obo <- match.arg(obo)
+	terms <- switch(obo,
+		ims=.must_msi_terms,
+		ms=.must_ms_terms)
+	obo <- get_obo(obo)
+	switch(match.arg(value),
+		name=obo$name[terms],
+		accession=obo$id[terms])
 }
 
 .ontology_index <- new.env()
 
 .must_msi_terms <- c(
 	# file content
-	"IMS:1000003" = "ibd binary type",
-	"IMS:1000009" = "ibd checksum",
-	"IMS:1000008" = "ibd identification",
+	fileContent = "IMS:1000003", # "ibd binary type"
+	fileContent = "IMS:1000009", # "ibd checksum"
+	fileContent = "IMS:1000008", # "ibd identification"
 	# scan settings
-	"IMS:1000040" = "scan direction",
-	"IMS:1000041" = "scan pattern",
-	"IMS:1000048" = "scan type",
-	"IMS:1000049" = "line scan direction",
-	"IMS:1000042" = "max count of pixels x",
-	"IMS:1000043" = "max count of pixels y",
-	"IMS:1000044" = "max dimension x",
-	"IMS:1000045" = "max dimension y",
-	"IMS:1000046" = "pixel size (x)",
+	scanSettings = "IMS:1000040", # "linescan sequence"	(previously "scan direction")
+	scanSettings = "IMS:1000041", # "scan pattern"
+	scanSettings = "IMS:1000048", # "scan type"
+	scanSettings = "IMS:1000049", # "line scan direction"
+	scanSettings = "IMS:1000042", # "max count of pixels x"
+	scanSettings = "IMS:1000043", # "max count of pixels y"
+	scanSettings = "IMS:1000044", # "max dimension x"
+	scanSettings = "IMS:1000045", # "max dimension y"
+	scanSettings = "IMS:1000046", # "pixel size (x)"		(previously "pixel size")
 	# scan
-	"IMS:1000050" = "position x",
-	"IMS:1000051" = "position y",
+	scan = "IMS:1000050", # "position x"
+	scan = "IMS:1000051", # "position y"
 	# spectrum binary data array
-	"IMS:1000101" = "external data",
-	"IMS:1000102" = "external offset",
-	"IMS:1000103" = "external array length",
-	"IMS:1000104" = "external encoded length")
+	binaryArrayData = "IMS:1000101", # "external data"
+	binaryArrayData = "IMS:1000102", # "external offset"
+	binaryArrayData = "IMS:1000103", # "external array length"
+	binaryArrayData = "IMS:1000104") # "external encoded length"
 
 .must_ms_terms <- c(
 	# file content
-	"MS:1000524" = "data file content",
+	fileContent = "MS:1000524", # "data file content"
 	# contact
-	"MS:1000586" = "contact name",
-	"MS:1000590" = "contact organization",
+	contact = "MS:1000586", # "contact name"
+	contact = "MS:1000590", # "contact affiliation" (previously "contact organization")
 	# instrument configuration
-	"MS:1000031" = "instrument model",
+	instrumentConfiguration = "MS:1000031", # "instrument model"
 	# source
-	"MS:1000008" = "ionization type",
+	source = "MS:1000008", # "ionization type"
 	# analyzer
-	"MS:1000443" = "mass analyzer type",
+	analyzer = "MS:1000443", # "mass analyzer type"
 	# detector
-	"MS:1000026" = "detector type",
+	detector = "MS:1000026", # "detector type"
 	# software
-	"MS:1000531" = "software",
+	software = "MS:1000531", # "software"
 	# data processing
-	"MS:1000452" = "data transformation",
+	dataProcessing = "MS:1000452", # "data transformation"
 	# spectrum
-	"MS:1000559" = "spectrum type",
-	"MS:1000525" = "spectrum representation",
+	spectrum = "MS:1000559", # "spectrum type"
+	spectrum = "MS:1000525", # "spectrum representation"
 	# scan list
-	"MS:1000570" = "spectra combination",
+	scanList = "MS:1000570", # "spectra combination"
 	# binary data array
-	"MS:1000513" = "binary data array",
-	"MS:1000518" = "binary data type",
-	"MS:1000572" = "binary data compression type")
+	binaryArrayData = "MS:1000513", # "binary data array"
+	binaryArrayData = "MS:1000518", # "binary data type"
+	binaryArrayData = "MS:1000572") # "binary data compression type"
