@@ -1,0 +1,26 @@
+
+import("methods")
+
+import("ProtGenerics")
+
+import("S4Vectors")
+
+import("ontologyIndex")
+
+import("matter")
+
+export(
+	"get_obo",
+	"valid_terms",
+	"find_terms",
+	"find_term")
+
+exportClasses("ImzML")
+
+export(
+	"parseImzML",
+	"exampleImzMLPath")
+
+S3method("print", "imzplist")
+
+useDynLib("CardinalIO", .registration=TRUE, .fixes="C_")
