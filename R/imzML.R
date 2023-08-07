@@ -70,7 +70,7 @@ setAs("list", "ImzML", function(from) {
 
 # test if userParam
 .is_userParam <- function(x) {
-	is.character(x) && "name" %in% names(x)
+	is.character(x) && "name" %in% names(x) && !"cv" %in% names(x)
 }
 
 # test if cvParam OR userParam
@@ -90,17 +90,17 @@ setAs("list", "ImzML", function(from) {
 	}
 	if ( length(x) > 0L ) {
 		recursive <- vapply(x, is.list, logical(1L))
+		userparam <- vapply(x, .is_userParam, logical(1L))
 		lens <- lengths(x)
 		ids <- names(x)
 		ids <- ifelse(recursive, paste0(ids, "(", lens, ")"), ids)
+		ids <- ifelse(userparam, "[userParam]", ids)
 		nms <- vapply(x, function(tag)
 			{
 				if ( is.list(tag) ) {
 					"..."
-				} else if ( .is_cvParam(tag) ) {
-					tag["name"] 	# cvParam
-				} else if ( .is_userParam(tag) ) {
-					"[userParam]"	# userParam
+				} else if ( .is_param(tag) ) {
+					tag["name"] 	# cvParam / userParam
 				} else {
 					tag[1L]			# other tags (e.g. "softwareRef")
 				}

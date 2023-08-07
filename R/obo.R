@@ -77,8 +77,8 @@ must_terms <- function(obo = c("ims", "ms"), value = c("name", "accession"))
 	scanSettings = "IMS:1000049", # "line scan direction"
 	scanSettings = "IMS:1000042", # "max count of pixels x"
 	scanSettings = "IMS:1000043", # "max count of pixels y"
-	scanSettings = "IMS:1000044", # "max dimension x"
-	scanSettings = "IMS:1000045", # "max dimension y"
+	scanSettings = "IMS:1000044", # "max dimension x" (should)
+	scanSettings = "IMS:1000045", # "max dimension y" (should)
 	scanSettings = "IMS:1000046", # "pixel size (x)" (previously "pixel size")
 	# scan
 	scan = "IMS:1000050", # "position x"

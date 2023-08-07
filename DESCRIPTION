@@ -11,7 +11,7 @@ Depends: methods, matter, ontologyIndex
 Imports: ProtGenerics, S4Vectors, stats
 Suggests: BiocStyle, testthat, knitr, rmarkdown
 VignetteBuilder: knitr
-biocViews: Software, Infrastructure,
+biocViews: Software, Infrastructure, DataImport,
 	MassSpectrometry, ImagingMassSpectrometry
 URL: http://www.cardinalmsi.org
 BugReports: https://github.com/kuwisdelu/CardinalIO/issues
