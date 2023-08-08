@@ -70,7 +70,7 @@ setAs("list", "ImzML", function(from) {
 
 # test if userParam
 .is_userParam <- function(x) {
-	is.character(x) && "name" %in% names(x) && !"cv" %in% names(x)
+	is.character(x) && all(c("name", "value") %in% names(x)) && !"cv" %in% names(x)
 }
 
 # test if cvParam OR userParam
@@ -78,11 +78,16 @@ setAs("list", "ImzML", function(from) {
 	.is_cvParam(x) || .is_userParam(x)
 }
 
+.xml_attr <- function(x) {
+	a <- attributes(x)
+	nm <- setdiff(names(a), c("names", "class"))
+	a[nm]
+}
+
 # print cvParams and userParams
 .show_params <- function(x, n = 12L, collapse = ", ")
 {
-	a <- attributes(x)
-	a <- a[setdiff(names(a), c("names", "class"))]
+	a <- .xml_attr(x)
 	if ( length(a) > 0L ) {
 		a <- vapply(a, as.character, character(1L))
 		a <- .shorten_strings(a)
@@ -141,7 +146,7 @@ print.imzplist <- function(x, n = 12L, collapse = ", ", ...)
 	invisible(x)
 }
 
-#### parse an imzML file ####
+#### Parse an imzML file ####
 ## --------------------------
 
 parseImzML <- function(file, ...)

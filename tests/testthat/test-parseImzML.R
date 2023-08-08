@@ -3,7 +3,7 @@ require(CardinalIO)
 
 context("parseimzML")
 
-test_that("parseImzML - continuous", {
+test_that("parseImzML", {
 
 	ims <- get_obo("ims")
 	path <- exampleImzMLFile("continuous")

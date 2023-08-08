@@ -8,6 +8,9 @@ extern "C" {
 
 SEXP parseImzML(SEXP file);
 
+SEXP writeImzML(SEXP xml, SEXP positions,
+	SEXP mzArrays, SEXP intensityArrays, SEXP file);
+
 } // extern "C"
 
 #endif // CARDINALIO

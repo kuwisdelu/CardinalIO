@@ -39,4 +39,16 @@ SEXP parseImzML(SEXP file)
 	return tags;
 }
 
+SEXP writeImzML(SEXP xml, SEXP positions,
+	SEXP mzArrays, SEXP intensityArrays, SEXP file)
+{
+	imzML doc;
+	doc.load_string(CHAR(STRING_ELT(xml, 0)));
+	if ( !doc.set_run(positions, mzArrays, intensityArrays) )
+		return Rf_ScalarLogical(false);
+	if ( !doc.save_file(CHAR(STRING_ELT(file, 0))) )
+		return Rf_ScalarLogical(false);
+	return Rf_ScalarLogical(true);
+}
+
 } // extern "C"

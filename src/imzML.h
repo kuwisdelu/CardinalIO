@@ -9,7 +9,7 @@
 
 #include "pugixml.h"
 
-// define required cvParam accessions for spectra
+// define required cvParam accessions
 #define MS_MZ_ARRAY_ID 					"MS:1000514"
 #define MS_INTENSITY_ARRAY_ID 			"MS:1000515"
 #define IMS_POSITION_X_ID 				"IMS:1000050"
@@ -27,6 +27,16 @@
 #define IMS_32_BIT_INTEGER_ID			"IMS:1000141" // obselete (included for compatibility)
 #define IMS_64_BIT_INTEGER_ID			"IMS:1000142" // obselete (included for compatibility)
 
+// define required cvParam names
+#define IMS_POSITION_X_NAME 				"position x"
+#define IMS_POSITION_Y_NAME					"position y"
+#define IMS_POSITION_Z_NAME					"position z"
+#define IMS_EXTERNAL_OFFSET_NAME 			"external offset"
+#define IMS_EXTERNAL_ARRAY_LENGTH_NAME 		"external array length"
+#define IMS_EXTERNAL_ENCODED_LENGTH_NAME 	"external encoded length"
+
+#define BUFLEN 32 // length of string buffers
+
 // make R string if valid or NA_STRING if empty
 #define mkCharOrNA(x) ((*(x)) == '\0' ? NA_STRING : Rf_mkChar((x)))
 
@@ -40,6 +50,18 @@ inline void checkInterrupt(void * nothing)
 inline bool pendingInterrupt()
 {
 	return !(R_ToplevelExec(checkInterrupt, NULL));
+}
+
+// find element in R list by name
+inline SEXP VECTOR_ELT_BY_NAME(SEXP x, const char * name)
+{
+	SEXP names = Rf_getAttrib(x, R_NamesSymbol);
+	for ( int i = 0; i < LENGTH(x); i++ )
+	{
+		if( strcmp(CHAR(STRING_ELT(names, i)), name) == 0 )
+			return VECTOR_ELT(x, i);
+	}
+	return R_NilValue;
 }
 
 //// imzML class
@@ -80,6 +102,11 @@ class imzML {
 				_spectra = _mzml.child("run").child("spectrumList");
 			}
 			return result;
+		}
+
+		bool save_file(const char * file)
+		{
+			return _doc.save_file(file);
 		}
 
 		//// Access major param groups
@@ -241,8 +268,8 @@ class imzML {
 			size_t n = 3; // NEED cvRef, accession, name
 			if ( node.attribute("value") )
 				n++;
-			if ( node.attribute("unitAccession") )
-				n += 2;
+			if ( node.attribute("unitCvRef") )
+				n += 3;
 			int i = 0, j = 0;
 			PROTECT(tag = Rf_allocVector(STRSXP, n));
 			PROTECT(tagNames = Rf_allocVector(STRSXP, n));
@@ -256,9 +283,11 @@ class imzML {
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("value").value()));
 				SET_STRING_ELT(tagNames, j++, Rf_mkChar("value"));
 			}
-			if ( node.attribute("unitAccession") ) {
+			if ( node.attribute("unitCvRef") ) {
+				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitCvRef").value()));
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitAccession").value()));
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitName").value()));
+				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_cv"));
 				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_id"));
 				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_name"));
 			}
@@ -271,9 +300,9 @@ class imzML {
 		SEXP get_userParam(pugi::xml_node node)
 		{
 			SEXP tag, tagNames;
-			size_t n = 2;
-			if ( node.attribute("unitAccession") )
-				n += 2;
+			size_t n = 2; // NEED name, value
+			if ( node.attribute("unitCvRef") )
+				n += 3;
 			int i = 0, j = 0;
 			PROTECT(tag = Rf_allocVector(STRSXP, n));
 			PROTECT(tagNames = Rf_allocVector(STRSXP, n));
@@ -281,9 +310,11 @@ class imzML {
 			SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("value").value()));
 			SET_STRING_ELT(tagNames, j++, Rf_mkChar("name"));
 			SET_STRING_ELT(tagNames, j++, Rf_mkChar("value"));
-			if ( node.attribute("unitAccession") ) {
+			if ( node.attribute("unitCvRef") ) {
+				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitCvRef").value()));
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitAccession").value()));
 				SET_STRING_ELT(tag, i++, Rf_mkChar(node.attribute("unitName").value()));
+				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_cv"));
 				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_id"));
 				SET_STRING_ELT(tagNames, j++, Rf_mkChar("unit_name"));
 			}
@@ -584,12 +615,13 @@ class imzML {
 			SET_STRING_ELT(positionsNames, 1, Rf_mkChar("position y"));
 			SET_STRING_ELT(positionsNames, 2, Rf_mkChar("position z"));
 			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node scan, x, y, z;
 			int i = 0;
 			while ( spectrum && i < nr ) {
-				pugi::xml_node scan = spectrum.child("scanList").child("scan");
-				pugi::xml_node x = find_param(scan, "cvParam", "accession", IMS_POSITION_X_ID);
-				pugi::xml_node y = find_param(scan, "cvParam", "accession", IMS_POSITION_Y_ID);
-				pugi::xml_node z = find_param(scan, "cvParam", "accession", IMS_POSITION_Z_ID);
+				scan = spectrum.child("scanList").child("scan");
+				x = find_param(scan, "cvParam", "accession", IMS_POSITION_X_ID);
+				y = find_param(scan, "cvParam", "accession", IMS_POSITION_Y_ID);
+				z = find_param(scan, "cvParam", "accession", IMS_POSITION_Z_ID);
 				SET_STRING_ELT(px, i, mkCharOrNA(x.attribute("value").value()));
 				SET_STRING_ELT(py, i, mkCharOrNA(y.attribute("value").value()));
 				SET_STRING_ELT(pz, i, mkCharOrNA(z.attribute("value").value()));
@@ -628,13 +660,18 @@ class imzML {
 			SET_STRING_ELT(dataArraysNames, 2, Rf_mkChar("external encoded length"));
 			SET_STRING_ELT(dataArraysNames, 3, Rf_mkChar("binary data type"));
 			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node dataArray, off, len, xlen, type;
 			int i = 0;
 			while ( spectrum && i < nr ) {
-				pugi::xml_node dataArray = find_binaryDataArray(spectrum, id);
-				pugi::xml_node off = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_OFFSET_ID);
-				pugi::xml_node len = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_ARRAY_LENGTH_ID);
-				pugi::xml_node xlen = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_ENCODED_LENGTH_ID);
-				pugi::xml_node type;
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; parse will be incomplete");
+					break;
+				}
+				dataArray = find_binaryDataArray(spectrum, id);
+				off = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_OFFSET_ID);
+				len = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_ARRAY_LENGTH_ID);
+				xlen = find_param(dataArray, "cvParam", "accession", IMS_EXTERNAL_ENCODED_LENGTH_ID);
 				// is this too clever?
 				if ( (type = find_param(dataArray, "cvParam", "accession", MS_32_BIT_INTEGER_ID)) ) {}
 				else if ( (type = find_param(dataArray, "cvParam", "accession", MS_64_BIT_INTEGER_ID)) ) {}
@@ -651,11 +688,6 @@ class imzML {
 				SET_STRING_ELT(ptype, i, mkCharOrNA(type.attribute("name").value()));
 				spectrum = spectrum.next_sibling();
 				i++;
-				// safe check for interrupt (allow xml destructor to run)
-				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; parse will be incomplete");
-					break;
-				}
 			}
 			SET_VECTOR_ELT(dataArrays, 0, poff);
 			SET_VECTOR_ELT(dataArrays, 1, plen);
@@ -695,6 +727,183 @@ class imzML {
 			return tags;
 		}
 
+		//// Set spectrum metadata
+		//--------------------------
+
+		// set spectrum ids from R vector
+		bool set_spectrum_ids()
+		{
+			int n = num_spectra();
+			char buffer[BUFLEN];
+			pugi::xml_node spectrum = first_spectrum();
+			int i = 0;
+			while ( i < n )
+			{
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; file will be incomplete");
+					return false;
+				}
+				// set spectrum id
+				snprintf(buffer, BUFLEN, "Spectrum=%d", i + 1);
+				spectrum.attribute("id").set_value(buffer);
+				snprintf(buffer, BUFLEN, "%d", i + 1);
+				spectrum.attribute("index").set_value(buffer);
+				// iterate
+				i++;
+				if ( spectrum.next_sibling() )
+					spectrum = spectrum.next_sibling();
+				else if ( i < n )
+					spectrum = spectrum.parent().append_copy(spectrum);
+			}
+			return true;
+		}
+
+		// set spectrum positions from R data frame
+		bool set_spectrum_positions(SEXP positions)
+		{
+			int n = num_spectra();
+			SEXP px = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_X_NAME);
+			SEXP py = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_Y_NAME);
+			SEXP pz = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_Z_NAME);
+			bool has_z = Rf_isNull(pz);
+			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node scan, x, y, z;
+			pugi::xml_attribute cv, id, name, value;
+			int i = 0;
+			while ( i < n )
+			{
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; file will be incomplete");
+					return false;
+				}
+				scan = spectrum.child("scanList").child("scan");
+				// set position x
+				x = scan.find_child_by_attribute("cvParam",
+					"accession", IMS_POSITION_X_ID);
+				if ( x )
+					scan.remove_child(x);
+				x = scan.append_child("cvParam");
+				x.append_attribute("cvRef").set_value("IMS");
+				x.append_attribute("accession").set_value(IMS_POSITION_X_ID);
+				x.append_attribute("name").set_value(IMS_POSITION_X_NAME);
+				x.append_attribute("value").set_value(CHAR(STRING_ELT(px, i)));
+				// set position y
+				y = scan.find_child_by_attribute("cvParam",
+					"accession", IMS_POSITION_Y_ID);
+				if ( y )
+					scan.remove_child(y);
+				y = scan.append_child("cvParam");
+				y.append_attribute("cvRef").set_value("IMS");
+				y.append_attribute("accession").set_value(IMS_POSITION_Y_ID);
+				y.append_attribute("name").set_value(IMS_POSITION_Y_NAME);
+				y.append_attribute("value").set_value(CHAR(STRING_ELT(py, i)));
+				// set position z
+				if ( has_z )
+				{
+					z = scan.find_child_by_attribute("cvParam",
+						"accession", IMS_POSITION_Z_ID);
+					if ( z )
+						scan.remove_child(z);
+					z = scan.append_child("cvParam");
+					z.append_attribute("cvRef").set_value("IMS");
+					z.append_attribute("accession").set_value(IMS_POSITION_Z_ID);
+					z.append_attribute("name").set_value(IMS_POSITION_Z_NAME);
+					z.append_attribute("value").set_value(CHAR(STRING_ELT(pz, i)));
+				}
+				// iterate
+				i++;
+				if ( spectrum.next_sibling() )
+					spectrum = spectrum.next_sibling();
+				else if ( i < n )
+					spectrum = spectrum.parent().append_copy(spectrum);
+			}
+			return true;
+		}
+
+		// set spectrum positions from R data frame
+		bool set_spectrum_arrays(SEXP dataArrays, const char * id)
+		{
+			int n = num_spectra();
+			SEXP poff = VECTOR_ELT_BY_NAME(dataArrays, IMS_EXTERNAL_OFFSET_NAME);
+			SEXP plen = VECTOR_ELT_BY_NAME(dataArrays, IMS_EXTERNAL_ARRAY_LENGTH_NAME);
+			SEXP pxlen = VECTOR_ELT_BY_NAME(dataArrays, IMS_EXTERNAL_ENCODED_LENGTH_NAME);
+			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node dataArray, binary, off, len, xlen;
+			int i = 0;
+			while ( i < n )
+			{
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; file will be incomplete");
+					return false;
+				}
+				dataArray = find_binaryDataArray(spectrum, id);
+				binary = dataArray.child("binary");
+				// set offset
+				off = dataArray.find_child_by_attribute("cvParam",
+					"accession", IMS_EXTERNAL_OFFSET_ID);
+				if ( off )
+					dataArray.remove_child(off);
+				off = dataArray.insert_child_before("cvParam", binary);
+				off.append_attribute("cvRef").set_value("IMS");
+				off.append_attribute("accession").set_value(IMS_EXTERNAL_OFFSET_ID);
+				off.append_attribute("name").set_value(IMS_EXTERNAL_OFFSET_NAME);
+				off.append_attribute("value").set_value(CHAR(STRING_ELT(poff, i)));
+				// set array length
+				len = dataArray.find_child_by_attribute("cvParam",
+					"accession", IMS_EXTERNAL_ARRAY_LENGTH_ID);
+				if ( len )
+					dataArray.remove_child(len);
+				len = dataArray.insert_child_before("cvParam", binary);
+				len.append_attribute("cvRef").set_value("IMS");
+				len.append_attribute("accession").set_value(IMS_EXTERNAL_ARRAY_LENGTH_ID);
+				len.append_attribute("name").set_value(IMS_EXTERNAL_ARRAY_LENGTH_NAME);
+				len.append_attribute("value").set_value(CHAR(STRING_ELT(plen, i)));
+				// set encoded length
+				xlen = dataArray.find_child_by_attribute("cvParam",
+					"accession", IMS_EXTERNAL_ENCODED_LENGTH_ID);
+				if ( xlen )
+					dataArray.remove_child(xlen);
+				xlen = dataArray.insert_child_before("cvParam", binary);
+				xlen.append_attribute("cvRef").set_value("IMS");
+				xlen.append_attribute("accession").set_value(IMS_EXTERNAL_ENCODED_LENGTH_ID);
+				xlen.append_attribute("name").set_value(IMS_EXTERNAL_ENCODED_LENGTH_NAME);
+				xlen.append_attribute("value").set_value(CHAR(STRING_ELT(pxlen, i)));
+				// iterate
+				i++;
+				if ( spectrum.next_sibling() )
+					spectrum = spectrum.next_sibling();
+				else if ( i < n )
+					spectrum = spectrum.parent().append_copy(spectrum);
+			}
+			return true;
+		}
+
+		bool set_spectrum_mzArrays(SEXP dataArrays)
+		{
+			return set_spectrum_arrays(dataArrays, MS_MZ_ARRAY_ID);
+		}
+
+		bool set_spectrum_intensityArrays(SEXP dataArrays)
+		{
+			return set_spectrum_arrays(dataArrays, MS_INTENSITY_ARRAY_ID);
+		}
+
+		bool set_spectrumList(SEXP positions, SEXP mzArrays, SEXP intensityArrays)
+		{
+			if ( !set_spectrum_ids() )
+				return false;
+			if ( !set_spectrum_positions(positions) )
+				return false;
+			if ( !set_spectrum_mzArrays(mzArrays) )
+				return false;
+			if ( !set_spectrum_intensityArrays(intensityArrays) )
+				return false;
+			return true;
+		}
+
 		//// Get run metadata
 		//--------------------
 
@@ -708,6 +917,11 @@ class imzML {
 			Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 			UNPROTECT(2);
 			return tags;
+		}
+
+		bool set_run(SEXP positions, SEXP mzArrays, SEXP intensityArrays)
+		{
+			return set_spectrumList(positions, mzArrays, intensityArrays);
 		}
 
 	protected:
