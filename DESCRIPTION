@@ -1,7 +1,7 @@
 Package: CardinalIO
 Type: Package
 Title: Read and write mass spectrometry imaging files
-Version: 0.1.0
+Version: 0.2.0
 Date: 2023-8-2
 Author: Kylie A. Bemis <k.bemis@northeastern.edu>
 Maintainer: Kylie A. Bemis <k.bemis@northeastern.edu>

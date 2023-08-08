@@ -1,4 +1,11 @@
 
+CHANGES IN VERSION 0.2.0 [2023-8-7]
+-----------------------------------
+
+NEW FEATURES
+
+    o Added writeImzML() method
+
 CHANGES IN VERSION 0.1.0 [2023-8-2]
 -----------------------------------
 
