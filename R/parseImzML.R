@@ -1,4 +1,26 @@
 
+#### Parse an imzML file ####
+## --------------------------
+
+parseImzML <- function(file, ...)
+{
+	path <- normalizePath(file, mustWork=TRUE)
+	parse <- .Call(C_parseImzML, path)
+	parse <- .new_ImzML(parse, validate=FALSE)
+	metadata(parse)$source <- file
+	metadata(parse)$location <- dirname(file)
+	metadata(parse)$name <- basename(file)
+	parse
+}
+
+exampleImzMLFile <- function(type = c("continuous", "processed"))
+{
+	path <- switch(match.arg(type),
+		continuous="extdata/Example_Continuous_imzML1.1.1/Example_Continuous.imzML",
+		processed="extdata/Example_Processed_imzML1.1.1/Example_Processed.imzML")
+	system.file(path, package="CardinalIO")
+}
+
 #### ImzML class ####
 ## --------------------
 
@@ -144,26 +166,4 @@ print.imzplist <- function(x, n = 12L, collapse = ", ", ...)
 	cat(sprintf("Params list of length %d\n", length(x)))
 	.show_params(x, n=n, collapse=collapse, ...)
 	invisible(x)
-}
-
-#### Parse an imzML file ####
-## --------------------------
-
-parseImzML <- function(file, ...)
-{
-	path <- normalizePath(file, mustWork=TRUE)
-	parse <- .Call(C_parseImzML, path)
-	parse <- .new_ImzML(parse, validate=FALSE)
-	metadata(parse)$source <- file
-	metadata(parse)$location <- dirname(file)
-	metadata(parse)$name <- basename(file)
-	parse
-}
-
-exampleImzMLFile <- function(type = c("continuous", "processed"))
-{
-	path <- switch(match.arg(type),
-		continuous="extdata/Example_Continuous_imzML1.1.1/Example_Continuous.imzML",
-		processed="extdata/Example_Processed_imzML1.1.1/Example_Processed.imzML")
-	system.file(path, package="CardinalIO")
 }

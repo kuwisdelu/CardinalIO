@@ -4,12 +4,15 @@
 
 setGeneric("writeImzML", function(object, ...) standardGeneric("writeImzML"))
 
-writeImzML <- function(object, file, ...)
+.writeImzML <- function(object, file, ...)
 {
 	if ( !is(object, "ImzML") )
 		stop("'object' must inherit from 'ImzML'")
 	if ( !is.character(file) || length(file) != 1L )
 		stop("'file' must be a single string")
+	file <- normalizePath(file, mustWork=FALSE)
+	if ( file.exists(file) )
+		warning("existing file ", sQuote(file), " will be overwritten")
 	positions <- object[["run"]][["spectrumList"]][["positions"]]
 	mzArrays <- object[["run"]][["spectrumList"]][["mzArrays"]]
 	intensityArrays <- object[["run"]][["spectrumList"]][["intensityArrays"]]
@@ -22,6 +25,8 @@ writeImzML <- function(object, file, ...)
 	mzML <- .new_imzML_skeleton(object)
 	.Call(C_writeImzML, mzML, positions, mzArrays, intensityArrays, file)
 }
+
+setMethod("writeImzML", "ImzML", .writeImzML)
 
 #### Deparse generic imzML tags ####
 ## ----------------------------------
@@ -95,6 +100,8 @@ writeImzML <- function(object, file, ...)
 .deparse_fileDescription <- function(object) {
 	tagname <- "fileDescription"
 	tag <- object[[tagname]]
+	if ( is.null(tag) )
+		stop("fileDescription is missing with no default")
 	fileContent <- .deparse_imzplist(tag[["fileContent"]], "fileContent")
 	sourceFileList <- .deparse_taglist(tag[["sourceFileList"]], "sourceFileList", "sourceFile")
 	contact <- .deparse_imzplist(tag[["contact"]], "contact")
@@ -104,18 +111,7 @@ writeImzML <- function(object, file, ...)
 
 # optional
 .deparse_sampleList <- function(object) {
-	tag <- object[["sampleList"]]
-	if ( is.null(tag) ) {
-		sprintf(
-			'<sampleList count="1">
-				<sample id="%s" name="Sample1">
-					<cvParam cvRef="MS" accession="MS:1000001" name="sample number" value="1"/>
-				</sample>
-			</sampleList>
-			', .get_sampleRef(NULL))
-	} else {
-		.deparse_taglist(tag, "sampleList", "sample")
-	}
+	.deparse_taglist(object[["sampleList"]], "sampleList", "sample")
 }
 
 # optional
@@ -197,14 +193,15 @@ writeImzML <- function(object, file, ...)
 	tagname <- "dataProcessingList"
 	tag <- object[["dataProcessingList"]]
 	if ( is.null(tag) ) {
-		'<dataProcessingList count="1">
-			<dataProcessing id="CardinalIOExport">
-				<processingMethod order="1" softwareRef="CardinalIO">
-					<cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML"/>
-				</processingMethod>
-			</dataProcessing>
-		</dataProcessingList>
-		'
+		sprintf(
+			'<dataProcessingList count="1">
+				<dataProcessing id="%s">
+					<processingMethod order="1" softwareRef="CardinalIO">
+						<cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML"/>
+					</processingMethod>
+				</dataProcessing>
+			</dataProcessingList>
+			', .get_defaultDataProcessingRef(NULL))
 	} else {
 		tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
 		tags <- paste0(unlist(tags), collapse="")
@@ -262,6 +259,24 @@ writeImzML <- function(object, file, ...)
 	</referenceableParamGroupList>
 	'
 
+.get_defaultInstrumentConfigurationRef <- function(object) {
+	tag <- object[["instrumentConfigurationList"]]
+	if ( is.null(tag) ) {
+		"IC1"
+	} else {
+		names(tag)[1L]
+	}
+}
+
+.get_defaultDataProcessingRef <- function(object) {
+	tag <- object[["dataProcessingList"]]
+	if ( is.null(tag) ) {
+		"CardinalIOExport"
+	} else {
+		names(tag)[1L]
+	}
+}
+
 .new_imzML_skeleton <- function(object)
 {
 	if ( !is(object, "ImzML") )
@@ -298,36 +313,8 @@ writeImzML <- function(object, file, ...)
 	sprintf(.imzML_skeleton, fileDescription, referenceableParamGroupList,
 		sampleList, scanSettingsList, softwareList,
 		instrumentConfigurationList, dataProcessingList,
-		.get_defaultInstrumentConfigurationRef(object),
-		.get_sampleRef(object), n,
+		.get_defaultInstrumentConfigurationRef(object), n,
 		.get_defaultDataProcessingRef(object))
-}
-
-.get_defaultInstrumentConfigurationRef <- function(object) {
-	tag <- object[["instrumentConfigurationList"]]
-	if ( is.null(tag) ) {
-		"IC1"
-	} else {
-		names(tag)[1L]
-	}
-}
-
-.get_sampleRef <- function(object) {
-	tag <- object[["sampleList"]]
-	if ( is.null(tag) ) {
-		"sample1"
-	} else {
-		names(tag)[1L]
-	}
-}
-
-.get_defaultDataProcessingRef <- function(object) {
-	tag <- object[["dataProcessingList"]]
-	if ( is.null(tag) ) {
-		"CardinalIOExport"
-	} else {
-		names(tag)[1L]
-	}
 }
 
 .imzML_skeleton <-
@@ -338,13 +325,13 @@ writeImzML <- function(object, file, ...)
 			<cv id="IMS" fullName="Imaging MS Ontology" version="1.1.0" URI="https://raw.githubusercontent.com/imzML/imzML/master/imagingMS.obo"/>
 		</cvList>
 		%s%s%s%s%s%s%s
-		<run id="Experiment01" defaultInstrumentConfigurationRef="%s" sampleRef="%s">
+		<run id="Experiment01" defaultInstrumentConfigurationRef="%s">
 			<spectrumList count="%d" defaultDataProcessingRef="%s">
 				<spectrum id="Spectrum=1" defaultArrayLength="0" index="1">
 					<referenceableParamGroupRef ref="spectrum1"/>
 					<scanList count="1">
 						<cvParam cvRef="MS" accession="MS:1000795" name="no combination"/>
-						<scan instrumentConfigurationRef="IC1">
+						<scan>
 							<referenceableParamGroupRef ref="scan1"/>
 						</scan>
 					</scanList>

@@ -43,11 +43,18 @@ SEXP writeImzML(SEXP xml, SEXP positions,
 	SEXP mzArrays, SEXP intensityArrays, SEXP file)
 {
 	imzML doc;
-	doc.load_string(CHAR(STRING_ELT(xml, 0)));
-	if ( !doc.set_run(positions, mzArrays, intensityArrays) )
+	if ( !doc.load_string(CHAR(STRING_ELT(xml, 0))) ) {
+		Rf_warning("problem occured while setting experiment metadata");
 		return Rf_ScalarLogical(false);
-	if ( !doc.save_file(CHAR(STRING_ELT(file, 0))) )
+	}
+	if ( !doc.set_run(positions, mzArrays, intensityArrays) ) {
+		Rf_warning("problem occured while setting spectrum metadata");
 		return Rf_ScalarLogical(false);
+	}
+	if ( !doc.save_file(CHAR(STRING_ELT(file, 0))) ) {
+		Rf_warning("problem occured while writing the imzML file");
+		return Rf_ScalarLogical(false);
+	}
 	return Rf_ScalarLogical(true);
 }
 

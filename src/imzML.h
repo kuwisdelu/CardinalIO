@@ -586,6 +586,11 @@ class imzML {
 			pugi::xml_node spectrum = first_spectrum();
 			int i = 0;
 			while ( spectrum ) {
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; parse may be incomplete");
+					break;
+				}
 				if ( i >= n ) {
 					Rf_warning("more spectra than spectrumList 'count'");
 					break;
@@ -618,6 +623,11 @@ class imzML {
 			pugi::xml_node scan, x, y, z;
 			int i = 0;
 			while ( spectrum && i < nr ) {
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; parse may be incomplete");
+					break;
+				}
 				scan = spectrum.child("scanList").child("scan");
 				x = find_param(scan, "cvParam", "accession", IMS_POSITION_X_ID);
 				y = find_param(scan, "cvParam", "accession", IMS_POSITION_Y_ID);
@@ -627,11 +637,6 @@ class imzML {
 				SET_STRING_ELT(pz, i, mkCharOrNA(z.attribute("value").value()));
 				spectrum = spectrum.next_sibling();
 				i++;
-				// safe check for interrupt (allow xml destructor to run)
-				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; parse will be incomplete");
-					break;
-				}
 			}
 			SET_VECTOR_ELT(positions, 0, px);
 			SET_VECTOR_ELT(positions, 1, py);
@@ -665,7 +670,7 @@ class imzML {
 			while ( spectrum && i < nr ) {
 				// safe check for interrupt (allow xml destructor to run)
 				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; parse will be incomplete");
+					Rf_warning("stopping early; parse may be incomplete");
 					break;
 				}
 				dataArray = find_binaryDataArray(spectrum, id);
@@ -741,7 +746,7 @@ class imzML {
 			{
 				// safe check for interrupt (allow xml destructor to run)
 				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; file will be incomplete");
+					Rf_warning("stopping early; file may be incomplete");
 					return false;
 				}
 				// set spectrum id
@@ -775,7 +780,7 @@ class imzML {
 			{
 				// safe check for interrupt (allow xml destructor to run)
 				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; file will be incomplete");
+					Rf_warning("stopping early; file may be incomplete");
 					return false;
 				}
 				scan = spectrum.child("scanList").child("scan");
@@ -836,7 +841,7 @@ class imzML {
 			{
 				// safe check for interrupt (allow xml destructor to run)
 				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; file will be incomplete");
+					Rf_warning("stopping early; file may be incomplete");
 					return false;
 				}
 				dataArray = find_binaryDataArray(spectrum, id);

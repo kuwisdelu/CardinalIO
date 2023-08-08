@@ -11,6 +11,8 @@ import("matter")
 
 importFrom("stats", "setNames")
 
+importFrom("utils", "packageVersion")
+
 export(
 	"get_obo",
 	"valid_terms",
@@ -18,13 +20,14 @@ export(
 	"find_term",
 	"must_terms")
 
+S3method("print", "imzplist")
+
 exportClasses("ImzML")
 
 export(
 	"parseImzML",
-	"writeImzML",
 	"exampleImzMLFile")
 
-S3method("print", "imzplist")
+exportMethods("writeImzML")
 
 useDynLib("CardinalIO", .registration=TRUE, .fixes="C_")
