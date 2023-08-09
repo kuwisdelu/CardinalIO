@@ -291,11 +291,11 @@ setMethod("writeImzML", "ImzML", .writeImzML)
 	# get spectrum representation
 	ms <- get_obo("ms")
 	fileContent <- object[["fileDescription"]][["fileContent"]]
-	representation_ids <- get_descendants(ms, "MS:1000525")
-	representation_ids <- which(names(fileContent) %in% representation_ids)
-	if ( length(representation_ids) != 1L )
+	representation_id <- get_descendants(ms, "MS:1000525")
+	representation_id <- which(names(fileContent) %in% representation_id)
+	if ( length(representation_id) != 1L )
 		stop("couldn't determine spectrum representation")
-	representation <- fileContent[[representation_ids]]["name"]
+	representation <- fileContent[[representation_id]]["name"]
 	# get m/z array data type
 	mzArrays <- object[["run"]][["spectrumList"]][["mzArrays"]]
 	mz.type <- unique(mzArrays[["binary data type"]])

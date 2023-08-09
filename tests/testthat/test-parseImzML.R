@@ -3,19 +3,19 @@ require(CardinalIO)
 
 context("parseimzML")
 
-test_that("parseImzML", {
+test_that("parseImzML - continuous", {
 
-	ims <- get_obo("ims")
 	path <- exampleImzMLFile("continuous")
 	p <- parseImzML(path)
+	
 	fc <- p$fileDescription$fileContent
-	ss1 <- p$scanSettingsList[[1L]]
+	ssl <- p$scanSettingsList[[1L]]
 
 	expect_in(find_term("continuous", value="accession"), names(fc))
-	expect_in(find_term("top down", value="accession"), names(ss1))
-	expect_in(find_term("flyback", value="accession"), names(ss1))
-	expect_in(find_term("horizontal line scan", value="accession"), names(ss1))
-	expect_in(find_term("linescan left right", value="accession"), names(ss1))
+	expect_in(find_term("top down", value="accession"), names(ssl))
+	expect_in(find_term("flyback", value="accession"), names(ssl))
+	expect_in(find_term("horizontal line scan", value="accession"), names(ssl))
+	expect_in(find_term("linescan left right", value="accession"), names(ssl))
 
 	mcpx <- find_term("max count of pixels x", value="accession")
 	mcpy <- find_term("max count of pixels y", value="accession")
@@ -23,11 +23,11 @@ test_that("parseImzML", {
 	mdy <- find_term("max dimension y", value="accession")
 	psx <- find_term("pixel size (x)", value="accession")
 
-	expect_equivalent(ss1[[mcpx]]["value"], "3")
-	expect_equivalent(ss1[[mcpy]]["value"], "3")
-	expect_equivalent(ss1[[mdx]]["value"], "300")
-	expect_equivalent(ss1[[mdy]]["value"], "300")
-	expect_equivalent(ss1[[psx]]["value"], "100.0")
+	expect_equivalent(ssl[[mcpx]]["value"], "3")
+	expect_equivalent(ssl[[mcpy]]["value"], "3")
+	expect_equivalent(ssl[[mdx]]["value"], "300")
+	expect_equivalent(ssl[[mdy]]["value"], "300")
+	expect_equivalent(ssl[[psx]]["value"], "100.0")
 
 	pos <- p$run$spectrumList$positions
 	mza <- p$run$spectrumList$mzArrays
@@ -52,17 +52,17 @@ test_that("parseImzML", {
 
 test_that("parseImzML - processed", {
 
-	ims <- get_obo("ims")
 	path <- exampleImzMLFile("processed")
 	p <- parseImzML(path)
+
 	fc <- p$fileDescription$fileContent
-	ss1 <- p$scanSettingsList[[1L]]
+	ssl <- p$scanSettingsList[[1L]]
 
 	expect_in(find_term("processed", value="accession"), names(fc))
-	expect_in(find_term("top down", value="accession"), names(ss1))
-	expect_in(find_term("flyback", value="accession"), names(ss1))
-	expect_in(find_term("horizontal line scan", value="accession"), names(ss1))
-	expect_in(find_term("linescan left right", value="accession"), names(ss1))
+	expect_in(find_term("top down", value="accession"), names(ssl))
+	expect_in(find_term("flyback", value="accession"), names(ssl))
+	expect_in(find_term("horizontal line scan", value="accession"), names(ssl))
+	expect_in(find_term("linescan left right", value="accession"), names(ssl))
 
 	mcpx <- find_term("max count of pixels x", value="accession")
 	mcpy <- find_term("max count of pixels y", value="accession")
@@ -70,11 +70,11 @@ test_that("parseImzML - processed", {
 	mdy <- find_term("max dimension y", value="accession")
 	psx <- find_term("pixel size (x)", value="accession")
 
-	expect_equivalent(ss1[[mcpx]]["value"], "3")
-	expect_equivalent(ss1[[mcpy]]["value"], "3")
-	expect_equivalent(ss1[[mdx]]["value"], "300")
-	expect_equivalent(ss1[[mdy]]["value"], "300")
-	expect_equivalent(ss1[[psx]]["value"], "100.0")
+	expect_equivalent(ssl[[mcpx]]["value"], "3")
+	expect_equivalent(ssl[[mcpy]]["value"], "3")
+	expect_equivalent(ssl[[mdx]]["value"], "300")
+	expect_equivalent(ssl[[mdy]]["value"], "300")
+	expect_equivalent(ssl[[psx]]["value"], "100.0")
 
 	pos <- p$run$spectrumList$positions
 	mza <- p$run$spectrumList$mzArrays
@@ -96,6 +96,24 @@ test_that("parseImzML - processed", {
 	expect_setequal(ia[["external array length"]], "8399")
 	expect_setequal(ia[["external encoded length"]], "33596")
 	expect_setequal(ia[["binary data type"]], "32-bit float")
+
+})
+
+test_that("parseImzML - ibd", {
+
+	path <- exampleImzMLFile("continuous")
+	path2 <- exampleImzMLFile("processed")
+	p <- parseImzML(path, ibd=TRUE)
+	p2 <- parseImzML(path2, ibd=TRUE)
+	
+	m <- as.list(mz(p))
+	m2 <- as.list(mz(p2))
+
+	i <- as.list(intensity(p))
+	i2 <- as.list(intensity(p2))
+
+	expect_equal(m, m2)
+	expect_equal(i, i2)
 
 })
 

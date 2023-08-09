@@ -8,7 +8,7 @@ Maintainer: Kylie A. Bemis <k.bemis@northeastern.edu>
 Description: Fast and efficient parsing, reading, and writing of mass spectrometry imaging experiment data files in the open imzML format.
 License: Artistic-2.0
 Depends: methods, matter, ontologyIndex
-Imports: ProtGenerics, S4Vectors, stats, utils
+Imports: BiocGenerics, ProtGenerics, S4Vectors, stats, tools, utils
 Suggests: BiocStyle, testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 biocViews: Software, Infrastructure, DataImport,

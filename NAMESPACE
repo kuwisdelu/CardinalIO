@@ -1,6 +1,8 @@
 
 import("methods")
 
+import("BiocGenerics")
+
 import("ProtGenerics")
 
 import("S4Vectors")
@@ -13,6 +15,12 @@ importFrom("stats", "setNames")
 
 importFrom("utils", "packageVersion")
 
+importFrom("tools",
+	"file_ext",
+	"file_path_sans_ext")
+
+exportMethods("metadata")
+
 export(
 	"get_obo",
 	"valid_terms",
@@ -23,6 +31,11 @@ export(
 S3method("print", "imzplist")
 
 exportClasses("ImzML")
+
+exportMethods(
+	"mz",
+	"intensity",
+	"checksum")
 
 export(
 	"parseImzML",

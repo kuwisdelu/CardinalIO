@@ -4,6 +4,10 @@
 \alias{ImzML}
 \alias{ImzML-class}
 
+\alias{checksum,ImzML-method}
+\alias{mz,ImzML-method}
+\alias{intensity,ImzML-method}
+
 \alias{parseImzML}
 \alias{exampleImzMLFile}
 
@@ -14,13 +18,17 @@
 }
 
 \usage{
-parseImzML(file, \dots)
+parseImzML(file, ibd = FALSE, check = ibd, \dots)
 
 exampleImzMLFile(type = c("continuous", "processed"))
 }
 
 \arguments{
     \item{file}{The file path to the ".imzML" file.}
+
+    \item{ibd}{Should the binary data file be attached?}
+
+    \item{check}{Should the UUID and checksum of the binary data file be checked against the corresponding imzML tags?}
 
     \item{\dots}{Not currently used.}
 
