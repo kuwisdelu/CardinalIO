@@ -2,12 +2,14 @@
 #### Parse an imzML file ####
 ## --------------------------
 
-parseImzML <- function(file, ibd = FALSE, check = ibd, ...)
+parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 {
 	path <- normalizePath(file, mustWork=TRUE)
 	if ( file_ext(path) != "imzML" )
 		warning("file ", sQuote(path), " does not end have '.imzML' extension")
-	parse <- .Call(C_parseImzML, path)
+	if ( !is.null(extra) && !is.character(extra) )
+		stop("'extra' must be a character vector or NULL")
+	parse <- .Call(C_parseImzML, path, extra)
 	parse <- .new_ImzML(parse, validate=FALSE)
 	if ( ibd || check )
 	{

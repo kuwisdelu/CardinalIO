@@ -1,4 +1,13 @@
 
+CHANGES IN VERSION 0.3.0 [2023-8-8]
+-----------------------------------
+
+NEW FEATURES
+
+    o Added 'extra' argument to parseImzML()
+    o Added 'ibd' argument to parseImzmL()
+    o Added checking of UUIDs and checksums
+
 CHANGES IN VERSION 0.2.0 [2023-8-7]
 -----------------------------------
 

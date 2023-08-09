@@ -715,10 +715,51 @@ class imzML {
 			return get_spectrum_arrays(MS_INTENSITY_ARRAY_ID);
 		}
 
-		SEXP get_spectrumList()
+		// get additional spectrum tags as R data frame
+		SEXP get_spectrum_extra(SEXP names)
+		{
+			if ( Rf_isNull(names) )
+				return R_NilValue;
+			int nr = num_spectra();
+			int nc = LENGTH(names);
+			SEXP extra;
+			PROTECT(extra = Rf_allocVector(VECSXP, nc));
+			for ( int j = 0; j < nc; j++ )
+				SET_VECTOR_ELT(extra, j, Rf_allocVector(STRSXP, nr));
+			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node scan, tag;
+			int i = 0;
+			while ( spectrum && i < nr ) {
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; parse may be incomplete");
+					break;
+				}
+				scan = spectrum.child("scanList").child("scan");
+				for ( int j = 0; j < nc; j++ )
+				{
+					tag = find_param(spectrum, "name", CHAR(STRING_ELT(names, j)));
+					if ( !tag )
+						tag = find_param(scan, "name", CHAR(STRING_ELT(names, j)));
+					SEXP x = VECTOR_ELT(extra, j);
+					SET_STRING_ELT(x, i, mkCharOrNA(tag.attribute("value").value()));
+				}
+				spectrum = spectrum.next_sibling();
+				i++;
+			}
+			Rf_setAttrib(extra, R_NamesSymbol, names);
+			Rf_setAttrib(extra, R_RowNamesSymbol, get_spectrum_ids());
+			Rf_setAttrib(extra, R_ClassSymbol, Rf_mkString("data.frame"));
+			UNPROTECT(1);
+			return extra;
+		}
+
+		SEXP get_spectrumList(SEXP extra)
 		{
 			SEXP tags, tagsNames;
 			int n = 3; // positions, mzArrays, intensityArrays
+			if ( !Rf_isNull(extra) )
+				n++;
 			PROTECT(tags = Rf_allocVector(VECSXP, n));
 			PROTECT(tagsNames = Rf_allocVector(STRSXP, n));
 			SET_VECTOR_ELT(tags, 0, get_spectrum_positions());
@@ -727,6 +768,11 @@ class imzML {
 			SET_STRING_ELT(tagsNames, 0, Rf_mkChar("positions"));
 			SET_STRING_ELT(tagsNames, 1, Rf_mkChar("mzArrays"));
 			SET_STRING_ELT(tagsNames, 2, Rf_mkChar("intensityArrays"));
+			if ( !Rf_isNull(extra) )
+			{
+				SET_VECTOR_ELT(tags, 3, get_spectrum_extra(extra));
+				SET_STRING_ELT(tagsNames, 3, Rf_mkChar("extra"));
+			}
 			Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 			UNPROTECT(2);
 			return tags;
@@ -912,12 +958,12 @@ class imzML {
 		//// Get run metadata
 		//--------------------
 
-		SEXP get_run()
+		SEXP get_run(SEXP extra)
 		{
 			SEXP tags, tagsNames;
 			PROTECT(tags = Rf_allocVector(VECSXP, 1));
 			PROTECT(tagsNames = Rf_allocVector(STRSXP, 1));
-			SET_VECTOR_ELT(tags, 0, get_spectrumList());
+			SET_VECTOR_ELT(tags, 0, get_spectrumList(extra));
 			SET_STRING_ELT(tagsNames, 0, Rf_mkChar("spectrumList"));
 			Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 			UNPROTECT(2);

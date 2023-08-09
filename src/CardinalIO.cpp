@@ -3,7 +3,7 @@
 
 extern "C" {
 
-SEXP parseImzML(SEXP file)
+SEXP parseImzML(SEXP file, SEXP extra)
 {
 	imzML doc;
 	doc.load_file(CHAR(Rf_asChar(file)));
@@ -32,7 +32,7 @@ SEXP parseImzML(SEXP file)
 	SET_STRING_ELT(tagsNames, j++, Rf_mkChar("instrumentConfigurationList"));
 	SET_VECTOR_ELT(tags, i++, doc.get_dataProcessingList());
 	SET_STRING_ELT(tagsNames, j++, Rf_mkChar("dataProcessingList"));
-	SET_VECTOR_ELT(tags, i++, doc.get_run());
+	SET_VECTOR_ELT(tags, i++, doc.get_run(extra));
 	SET_STRING_ELT(tagsNames, j++, Rf_mkChar("run"));
 	Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 	UNPROTECT(2);
@@ -40,7 +40,8 @@ SEXP parseImzML(SEXP file)
 }
 
 SEXP writeImzML(SEXP xml, SEXP positions,
-	SEXP mzArrays, SEXP intensityArrays, SEXP file)
+	SEXP mzArrays, SEXP intensityArrays,
+	SEXP file)
 {
 	imzML doc;
 	if ( !doc.load_string(CHAR(STRING_ELT(xml, 0))) ) {

@@ -99,12 +99,23 @@ test_that("parseImzML - processed", {
 
 })
 
-test_that("parseImzML - ibd", {
+test_that("parseImzML - ibd/extra", {
+
+	tic <- c(
+		"121.85039039868471",
+		"182.31835420101888",
+		"161.8091904482675",
+		"200.9633277092539",
+		"135.30584173158496",
+		"108.39597418421639",
+		"127.84664447846832",
+		"168.27018147522492",
+		"243.5395066031077")
 
 	path <- exampleImzMLFile("continuous")
 	path2 <- exampleImzMLFile("processed")
-	p <- parseImzML(path, ibd=TRUE)
-	p2 <- parseImzML(path2, ibd=TRUE)
+	p <- parseImzML(path, ibd=TRUE, extra="total ion current")
+	p2 <- parseImzML(path2, ibd=TRUE, extra="total ion current")
 	
 	m <- as.list(mz(p))
 	m2 <- as.list(mz(p2))
@@ -114,6 +125,12 @@ test_that("parseImzML - ibd", {
 
 	expect_equal(m, m2)
 	expect_equal(i, i2)
+
+	sl <- p$run$spectrumList
+	sl2 <- p2$run$spectrumList
+
+	expect_equal(tic, sl$extra[["total ion current"]])
+	expect_equal(tic, sl2$extra[["total ion current"]])
 
 })
 
