@@ -26,11 +26,13 @@ export(
 	"valid_terms",
 	"find_terms",
 	"find_term",
-	"must_terms")
+	"find_descendants_in")
 
 S3method("print", "imzplist")
 
-exportClasses("ImzML")
+exportClasses(
+	"ImzMeta",
+	"ImzML")
 
 exportMethods(
 	"mz",
@@ -38,6 +40,7 @@ exportMethods(
 	"checksum")
 
 export(
+	"ImzMeta",
 	"parseImzML",
 	"exampleImzMLFile")
 

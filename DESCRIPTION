@@ -10,6 +10,7 @@ License: Artistic-2.0
 Depends: methods, matter, ontologyIndex
 Imports: BiocGenerics, ProtGenerics, S4Vectors, stats, tools, utils
 Suggests: BiocStyle, testthat, knitr, rmarkdown
+Collate: ImzMeta.R ImzML.R obo.R parseImzML.R writeImzML.R
 VignetteBuilder: knitr
 biocViews: Software, Infrastructure, DataImport,
 	MassSpectrometry, ImagingMassSpectrometry

@@ -798,7 +798,7 @@ class imzML {
 				// set spectrum id
 				snprintf(buffer, BUFLEN, "Spectrum=%d", i + 1);
 				spectrum.attribute("id").set_value(buffer);
-				snprintf(buffer, BUFLEN, "%d", i + 1);
+				snprintf(buffer, BUFLEN, "%d", i);
 				spectrum.attribute("index").set_value(buffer);
 				// iterate
 				i++;

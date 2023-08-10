@@ -123,13 +123,18 @@ setMethod("writeImzML", "ImzML", .writeImzML)
 .deparse_softwareList <- function(object) {
 	tag <- object[["softwareList"]]
 	if ( is.null(tag) ) {
+		if ( isNamespaceLoaded("Cardinal") ) {
+			package <- "Cardinal"
+		} else {
+			package <- "CardinalIO"
+		}
 		sprintf(
 			'<softwareList count="1">
-				<software id="CardinalIO" version="%s">
-					<cvParam cvRef="MS" accession="MS:1000799" name="custom unreleased software tool" value="CardinalIO"/>
+				<software id="%s" version="%s">
+					<cvParam cvRef="MS" accession="MS:1000799" name="custom unreleased software tool" value="%s"/>
 				</software>
 			</softwareList>
-			', packageVersion("CardinalIO"))
+			', package, packageVersion(package), package)
 	} else {
 		.deparse_taglist(tag, "softwareList", "software")
 	}
@@ -193,15 +198,20 @@ setMethod("writeImzML", "ImzML", .writeImzML)
 	tagname <- "dataProcessingList"
 	tag <- object[["dataProcessingList"]]
 	if ( is.null(tag) ) {
+		if ( isNamespaceLoaded("Cardinal") ) {
+			package <- "Cardinal"
+		} else {
+			package <- "CardinalIO"
+		}
 		sprintf(
 			'<dataProcessingList count="1">
 				<dataProcessing id="%s">
-					<processingMethod order="1" softwareRef="CardinalIO">
+					<processingMethod order="1" softwareRef="%s">
 						<cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML"/>
 					</processingMethod>
 				</dataProcessing>
 			</dataProcessingList>
-			', .get_defaultDataProcessingRef(NULL))
+			', .get_defaultDataProcessingRef(NULL), package)
 	} else {
 		tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
 		tags <- paste0(unlist(tags), collapse="")
@@ -271,7 +281,7 @@ setMethod("writeImzML", "ImzML", .writeImzML)
 .get_defaultDataProcessingRef <- function(object) {
 	tag <- object[["dataProcessingList"]]
 	if ( is.null(tag) ) {
-		"CardinalIOExport"
+		"CardinalProcessing"
 	} else {
 		names(tag)[1L]
 	}
@@ -289,13 +299,11 @@ setMethod("writeImzML", "ImzML", .writeImzML)
 	instrumentConfigurationList <- .deparse_instrumentConfigurationList(object)
 	dataProcessingList <- .deparse_dataProcessingList(object)
 	# get spectrum representation
-	ms <- get_obo("ms")
 	fileContent <- object[["fileDescription"]][["fileContent"]]
-	representation_id <- get_descendants(ms, "MS:1000525")
-	representation_id <- which(names(fileContent) %in% representation_id)
-	if ( length(representation_id) != 1L )
+	representation <- find_descendants_in(fileContent, "MS:1000525", "ms")
+	if ( length(representation) != 1L )
 		stop("couldn't determine spectrum representation")
-	representation <- fileContent[[representation_id]]["name"]
+	representation <- representation[[1L]]["name"]
 	# get m/z array data type
 	mzArrays <- object[["run"]][["spectrumList"]][["mzArrays"]]
 	mz.type <- unique(mzArrays[["binary data type"]])
