@@ -4,7 +4,7 @@
 \alias{valid_terms}
 \alias{find_terms}
 \alias{find_term}
-\alias{must_terms}
+\alias{find_descendants_in}
 
 \title{Mass spectrometry imaging ontology}
 
@@ -24,8 +24,7 @@ find_terms(pattern, obo = c("ims", "ms", "uo"),
 find_term(term, obo = c("ims", "ms", "uo"),
     value = c("name", "accession"))
 
-must_terms(obo = c("ims", "ms"),
-    value = c("name", "accession"))
+find_descendants_in(list, terms, obo = c("ims", "ms", "uo"))
 }
 
 \arguments{
@@ -42,6 +41,8 @@ must_terms(obo = c("ims", "ms"),
     \item{check}{When validating terms, are they names ('name'), accession IDs ('accession') or either ('any')?}
 
     \item{value}{Should the term names ('name') or accession IDs ('accession') be returned?}
+
+    \item{list}{A named list where the names are accession IDs.}
 }
 
 \details{
@@ -49,13 +50,15 @@ must_terms(obo = c("ims", "ms"),
 
     \code{find_term()} and \code{find_terms()} both query the specified ontology for the given term and return it if found. The former uses partial matching via \code{\link{pmatch}} and must unambiguously resolve to a single term. The latter uses \code{\link{grep}} and finds all potential matching terms.
 
-    \code{must_terms()} returns a character vector of the minimal required terms that must be present in a valid imzML document. This is \emph{not} an extensive list of \code{"MUST"} terms, but only those that are CV parameters of required elements. These also do \code{not} fulfill minimum reporting guidelines for MS imaging experiments. They are only required to create a valid imzML file.
+    \code{find_descendants_in()} finds descendants of particular terms in a named list where the names are accession IDs. It returns the list subsetted to matching descendants.
 }
 
 \value{
 	For \code{get_obo()}, a \code{ontology_index} object.
 
     For \code{valid_terms()}, a logical vector indicating whether the corresponding terms are valid.
+
+    For \code{find_descendants_in()}, a subset of the original list.
 
     For all others, a character vector of the requested terms.
 }

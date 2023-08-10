@@ -34,7 +34,7 @@ find_terms <- function(pattern, obo = c("ims", "ms", "uo"),
 {
 	value <- match.arg(value)
 	index <- get_obo(match.arg(obo))
-	matches <- grep(pattern, index$name, value=TRUE)
+	matches <- grep(pattern, index$name, ignore.case=TRUE, value=TRUE)
 	switch(value, name=matches, accession=setNames(names(matches), matches))
 }
 

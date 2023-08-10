@@ -13,6 +13,16 @@ setGeneric("writeImzML", function(object, ...) standardGeneric("writeImzML"))
 	file <- normalizePath(file, mustWork=FALSE)
 	if ( file.exists(file) )
 		warning("existing file ", sQuote(file), " will be overwritten")
+	fileContent <- object[["fileDescription"]][["fileContent"]]
+	ibd_type <- "IMS:1000003"
+	ibd_uuid <- "IMS:1000008"
+	ibd_checksum <- "IMS:1000009"
+	if ( length(find_descendants_in(fileContent, ibd_type)) < 1L)
+		stop("missing required tag ", sQuote(ibd_type), " (ibd binary type)")
+	if ( length(find_descendants_in(fileContent, ibd_uuid)) < 1L)
+		stop("missing required tag ", sQuote(ibd_uuid), " (ibd identification)")
+	if ( length(find_descendants_in(fileContent, ibd_checksum)) < 1L)
+		stop("missing required tag ", sQuote(ibd_checksum), " (ibd checksum)")
 	positions <- object[["run"]][["spectrumList"]][["positions"]]
 	mzArrays <- object[["run"]][["spectrumList"]][["mzArrays"]]
 	intensityArrays <- object[["run"]][["spectrumList"]][["intensityArrays"]]
@@ -26,7 +36,11 @@ setGeneric("writeImzML", function(object, ...) standardGeneric("writeImzML"))
 	.Call(C_writeImzML, mzML, positions, mzArrays, intensityArrays, file)
 }
 
-setMethod("writeImzML", "ImzML", .writeImzML)
+setMethod("writeImzML", "ImzML", 
+	function(object, file, ...)
+	{
+		.writeImzML(object, file=file, ...)
+	})
 
 #### Deparse generic imzML tags ####
 ## ----------------------------------

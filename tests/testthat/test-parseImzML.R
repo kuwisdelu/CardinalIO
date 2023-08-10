@@ -9,13 +9,17 @@ test_that("parseImzML - continuous", {
 	p <- parseImzML(path)
 	
 	fc <- p$fileDescription$fileContent
-	ssl <- p$scanSettingsList[[1L]]
+	ss1 <- p$scanSettingsList[[1L]]
+
+	expect_length(find_descendants_in(fc, "IMS:1000003"), 1L)
+	expect_length(find_descendants_in(fc, "IMS:1000008"), 1L)
+	expect_length(find_descendants_in(fc, "IMS:1000009"), 1L)
 
 	expect_in(find_term("continuous", value="accession"), names(fc))
-	expect_in(find_term("top down", value="accession"), names(ssl))
-	expect_in(find_term("flyback", value="accession"), names(ssl))
-	expect_in(find_term("horizontal line scan", value="accession"), names(ssl))
-	expect_in(find_term("linescan left right", value="accession"), names(ssl))
+	expect_in(find_term("top down", value="accession"), names(ss1))
+	expect_in(find_term("flyback", value="accession"), names(ss1))
+	expect_in(find_term("horizontal line scan", value="accession"), names(ss1))
+	expect_in(find_term("linescan left right", value="accession"), names(ss1))
 
 	mcpx <- find_term("max count of pixels x", value="accession")
 	mcpy <- find_term("max count of pixels y", value="accession")
@@ -23,11 +27,11 @@ test_that("parseImzML - continuous", {
 	mdy <- find_term("max dimension y", value="accession")
 	psx <- find_term("pixel size (x)", value="accession")
 
-	expect_equivalent(ssl[[mcpx]]["value"], "3")
-	expect_equivalent(ssl[[mcpy]]["value"], "3")
-	expect_equivalent(ssl[[mdx]]["value"], "300")
-	expect_equivalent(ssl[[mdy]]["value"], "300")
-	expect_equivalent(ssl[[psx]]["value"], "100.0")
+	expect_equivalent(ss1[[mcpx]]["value"], "3")
+	expect_equivalent(ss1[[mcpy]]["value"], "3")
+	expect_equivalent(ss1[[mdx]]["value"], "300")
+	expect_equivalent(ss1[[mdy]]["value"], "300")
+	expect_equivalent(ss1[[psx]]["value"], "100.0")
 
 	pos <- p$run$spectrumList$positions
 	mza <- p$run$spectrumList$mzArrays
@@ -56,13 +60,17 @@ test_that("parseImzML - processed", {
 	p <- parseImzML(path)
 
 	fc <- p$fileDescription$fileContent
-	ssl <- p$scanSettingsList[[1L]]
+	ss1 <- p$scanSettingsList[[1L]]
+
+	expect_length(find_descendants_in(fc, "IMS:1000003"), 1L)
+	expect_length(find_descendants_in(fc, "IMS:1000008"), 1L)
+	expect_length(find_descendants_in(fc, "IMS:1000009"), 1L)
 
 	expect_in(find_term("processed", value="accession"), names(fc))
-	expect_in(find_term("top down", value="accession"), names(ssl))
-	expect_in(find_term("flyback", value="accession"), names(ssl))
-	expect_in(find_term("horizontal line scan", value="accession"), names(ssl))
-	expect_in(find_term("linescan left right", value="accession"), names(ssl))
+	expect_in(find_term("top down", value="accession"), names(ss1))
+	expect_in(find_term("flyback", value="accession"), names(ss1))
+	expect_in(find_term("horizontal line scan", value="accession"), names(ss1))
+	expect_in(find_term("linescan left right", value="accession"), names(ss1))
 
 	mcpx <- find_term("max count of pixels x", value="accession")
 	mcpy <- find_term("max count of pixels y", value="accession")
@@ -70,11 +78,11 @@ test_that("parseImzML - processed", {
 	mdy <- find_term("max dimension y", value="accession")
 	psx <- find_term("pixel size (x)", value="accession")
 
-	expect_equivalent(ssl[[mcpx]]["value"], "3")
-	expect_equivalent(ssl[[mcpy]]["value"], "3")
-	expect_equivalent(ssl[[mdx]]["value"], "300")
-	expect_equivalent(ssl[[mdy]]["value"], "300")
-	expect_equivalent(ssl[[psx]]["value"], "100.0")
+	expect_equivalent(ss1[[mcpx]]["value"], "3")
+	expect_equivalent(ss1[[mcpy]]["value"], "3")
+	expect_equivalent(ss1[[mdx]]["value"], "300")
+	expect_equivalent(ss1[[mdy]]["value"], "300")
+	expect_equivalent(ss1[[psx]]["value"], "100.0")
 
 	pos <- p$run$spectrumList$positions
 	mza <- p$run$spectrumList$mzArrays

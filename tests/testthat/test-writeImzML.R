@@ -7,6 +7,7 @@ test_that("writeImzML - continuous", {
 
 	path <- exampleImzMLFile("continuous")
 	path2 <- tempfile(fileext=".imzML")
+	path3 <- tempfile(fileext=".imzML")
 
 	p <- parseImzML(path)
 	success <- writeImzML(p, path2)
@@ -25,6 +26,11 @@ test_that("writeImzML - continuous", {
 	expect_equivalent(p$run$spectrumList$positions, p2$run$spectrumList$positions)
 	expect_equivalent(p$run$spectrumList$mzArrays, p2$run$spectrumList$mzArrays)
 	expect_equivalent(p$run$spectrumList$intensityArrays, p2$run$spectrumList$intensityArrays)
+
+	p3 <- as(as(p, "ImzMeta"), "ImzML")
+
+	expect_error(writeImzML(p3))
+	expect_error(writeImzML(p3, path3))
 
 })
 
@@ -32,6 +38,7 @@ test_that("writeImzML - processed", {
 
 	path <- exampleImzMLFile("processed")
 	path2 <- tempfile(fileext=".imzML")
+	path3 <- tempfile(fileext=".imzML")
 
 	p <- parseImzML(path)
 	success <- writeImzML(p, path2)
@@ -50,5 +57,10 @@ test_that("writeImzML - processed", {
 	expect_equivalent(p$run$spectrumList$positions, p2$run$spectrumList$positions)
 	expect_equivalent(p$run$spectrumList$mzArrays, p2$run$spectrumList$mzArrays)
 	expect_equivalent(p$run$spectrumList$intensityArrays, p2$run$spectrumList$intensityArrays)
+
+	p3 <- as(as(p, "ImzMeta"), "ImzML")
+
+	expect_error(writeImzML(p3))
+	expect_error(writeImzML(p3, path3))
 
 })

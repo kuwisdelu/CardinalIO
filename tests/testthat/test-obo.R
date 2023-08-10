@@ -13,17 +13,14 @@ test_that("obo", {
 	expect_is(ms, "ontology_index")
 	expect_is(uo, "ontology_index")
 
-	ims_must <- must_terms("ims")
-	ms_must <- must_terms("ms")
-
-	expect_true(all(valid_terms(ims_must, "ims")))
-	expect_true(all(valid_terms(ms_must, "ms")))
-
 	pos_terms <- unname(grep("position", ims$name, value=TRUE))
 	ibd_terms <- unname(grep("ibd", ims$name, value=TRUE))
 
 	expect_setequal(find_terms("position", "ims"), pos_terms)
 	expect_setequal(find_terms("ibd", "ims"), ibd_terms)
+
+	expect_true(all(valid_terms(find_terms("position", "ims"))))
+	expect_true(all(valid_terms(find_terms("ibd", "ims"))))
 
 	expect_equivalent(
 		find_term("position x", "ims"),
@@ -48,7 +45,12 @@ test_that("obo", {
 		ims$name["IMS:1000104"])
 
 	expect_error(find_term("position"))
-	expect_error(find_term(c("position x", "position y")))
+
+	terms <- list(
+		"MS:1000128"="profile spectrum",
+		"MS:1000127"="centroid spectrum")
+
+	expect_equal(terms, find_descendants_in(terms, "MS:1000525", "ms"))
 
 })
 
