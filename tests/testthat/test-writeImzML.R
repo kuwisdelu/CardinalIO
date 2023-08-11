@@ -98,10 +98,9 @@ test_that("writeImzML + ibd - continuous", {
 	mz <- as.numeric(p$ibd$mz[[1L]])
 	intensity <- do.call(cbind, as.list(p$ibd$intensity))
 	positions <- p$run$spectrumList$positions
-	
 	success <- writeImzML(p, path2, positions=positions,
 		mz=mz, intensity=intensity)
-
+	
 	p2 <- parseImzML(path2, ibd=TRUE)
 	mz2 <- as.numeric(p2$ibd$mz[[1L]])
 	intensity2 <- do.call(cbind, as.list(p2$ibd$intensity))
@@ -115,11 +114,12 @@ test_that("writeImzML + ibd - continuous", {
 	mz3 <- p2$ibd$mz
 	intensity3 <- p2$ibd$intensity
 	positions3 <- p2$run$spectrumList$positions
-
+	
 	success <- writeImzML(p, path2, positions=positions,
 		mz=mz3, intensity=intensity3, asis=TRUE)
 	
 	p3 <- parseImzML(path2, ibd=TRUE)
+	
 	expect_identical(
 		p2$fileDescription$fileContent,
 		p3$fileDescription$fileContent)
@@ -142,16 +142,16 @@ test_that("writeImzML + ibd - processed", {
 
 	p <- parseImzML(path, ibd=TRUE)
 	
-	mz <- as.numeric(p$ibd$mz[[1L]])
-	intensity <- do.call(cbind, as.list(p$ibd$intensity))
+	mz <- as.list(p$ibd$mz)
+	intensity <- as.list(p$ibd$intensity)
 	positions <- p$run$spectrumList$positions
 	
 	success <- writeImzML(p, path2, positions=positions,
 		mz=mz, intensity=intensity)
 
 	p2 <- parseImzML(path2, ibd=TRUE)
-	mz2 <- as.numeric(p2$ibd$mz[[1L]])
-	intensity2 <- do.call(cbind, as.list(p2$ibd$intensity))
+	mz2 <- as.list(p2$ibd$mz)
+	intensity2 <- as.list(p2$ibd$intensity)
 	positions2 <- p2$run$spectrumList$positions
 
 	expect_equivalent(mz, mz2)
@@ -167,6 +167,7 @@ test_that("writeImzML + ibd - processed", {
 		mz=mz3, intensity=intensity3, asis=TRUE)
 	
 	p3 <- parseImzML(path2, ibd=TRUE)
+	
 	expect_identical(
 		p2$fileDescription$fileContent,
 		p3$fileDescription$fileContent)

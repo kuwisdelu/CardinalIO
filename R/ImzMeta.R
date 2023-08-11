@@ -22,7 +22,7 @@ ImzMeta <- function(...) .new_ImzMeta(...)
 	analyzer = 					"MS:1000443",
 	# detector
 	detectorType = 				"MS:1000026",
-	# data processing
+	# data transformation
 	dataProcessing = 			"MS:1000543")
 
 .meta_ims_tags <- list(
@@ -42,6 +42,12 @@ ImzMeta <- function(...) .new_ImzMeta(...)
 	"contactAffiliation",
 	"contactEmail",
 	"pixelSize")
+
+# these tags allow multiple CV params
+.multi_meta_tags <- "dataProcessing"
+
+# names of tags allowing multiple CV params
+.get_multi_meta_tagnames <- function() .multi_meta_tags
 
 # names of ms tags to validate CV names/accessions
 .get_cv_meta_ms_tagnames <- function() {
@@ -118,7 +124,11 @@ setReplaceMethod("[[", "ImzMeta",
 			} else {
 				stop("ImzMeta tag not recognized: ", sQuote(i))
 			}
-			value <- find_term(value, obo=obo, value="name")
+			if ( i %in% .get_multi_meta_tagnames() ) {
+				value <- unlist(lapply(value, find_term, obo=obo, value="name"))
+			} else {
+				value <- find_term(value, obo=obo, value="name")
+			}
 		} else if ( i %in% names(.get_all_meta_tags()) ) {
 			value <- as.character(value)
 		} else {
@@ -213,36 +223,36 @@ setMethod("show", "ImzMeta", function(object) {
 	ic1 <- from[["instrumentConfigurationList"]][[1L]]
 	.new_ImzMeta(
 		spectrumType=.find_single_term_or_NULL(
-			fileContent, tags$spectrumType, "ms", "name"),
+			fileContent, tags[["spectrumType"]], "ms", "name"),
 		spectrumRepresentation=.find_single_term_or_NULL(
-			fileContent, tags$spectrumRepresentation, "ms", "name"),
+			fileContent, tags[["spectrumRepresentation"]], "ms", "name"),
 		contactName=.find_single_term_or_NULL(
-			contact, tags$contactName, "ms", "value"),
+			contact, tags[["contactName"]], "ms", "value"),
 		contactAffiliation=.find_single_term_or_NULL(
-			contact, tags$contactAffiliation, "ms", "value"),
+			contact, tags[["contactAffiliation"]], "ms", "value"),
 		contactEmail=.find_single_term_or_NULL(
-			contact, tags$contactEmail, "ms", "value"),
+			contact, tags[["contactEmail"]], "ms", "value"),
 		instrumentModel=.find_single_term_or_NULL(
-			ic1, tags$instrumentModel, "ms", "name"),
+			ic1, tags[["instrumentModel"]], "ms", "name"),
 		ionSource=.find_single_term_or_NULL(
-			ic1$componentList$source,
-			tags$ionSource, "ms", "name"),
+			ic1[["componentList"]][["source"]],
+			tags[["ionSource"]], "ms", "name"),
 		analyzer=.find_single_term_or_NULL(
-			ic1$componentList$analyzer,
-			tags$analyzer, "ms", "name"),
+			ic1[["componentList"]][["analyzer"]],
+			tags[["analyzer"]], "ms", "name"),
 		detectorType=.find_single_term_or_NULL(
-			ic1$componentList$detector,
-			tags$detectorType, "ms", "name"),
+			ic1[["componentList"]][["detector"]],
+			tags[["detectorType"]], "ms", "name"),
 		lineScanSequence=.find_single_term_or_NULL(
-			ss1, tags$lineScanSequence, "ims", "name"),
+			ss1, tags[["lineScanSequence"]], "ims", "name"),
 		scanPattern=.find_single_term_or_NULL(
-			ss1, tags$scanPattern, "ims", "name"),
+			ss1, tags[["scanPattern"]], "ims", "name"),
 		scanType=.find_single_term_or_NULL(
-			ss1, tags$scanType, "ims", "name"),
+			ss1, tags[["scanType"]], "ims", "name"),
 		lineScanDirection=.find_single_term_or_NULL(
-			ss1, tags$lineScanDirection, "ims", "name"),
+			ss1, tags[["lineScanDirection"]], "ims", "name"),
 		pixelSize=.find_single_term_or_NULL(
-			ss1, tags$pixelSize, "ims", "value"))
+			ss1, tags[["pixelSize"]], "ims", "value"))
 }
 
 #### ImzMeta to ImzML conversion ####
@@ -262,32 +272,32 @@ setMethod("show", "ImzMeta", function(object) {
 	ms <- get_obo("ms")
 	fileContent <- structure(list(), class="imzplist")
 	# get spectrum type
-	if ( !is.null(from$spectrumType) ) {
-		id <- ms$id[ms$name %in% from$spectrumType]
-		fileContent[[id]] <- .cvparam("MS", id, from$spectrumType)
+	if ( !is.null(from[["spectrumType"]]) ) {
+		id <- ms$id[ms$name %in% from[["spectrumType"]]]
+		fileContent[[id]] <- .cvparam("MS", id, from[["spectrumType"]])
 	} else {
 		stop("missing spectrumType")
 	}
 	# get spectrum representation
-	if ( !is.null(from$spectrumRepresentation) ) {
-		id <- ms$id[ms$name %in% from$spectrumRepresentation]
-		fileContent[[id]] <- .cvparam("MS", id, from$spectrumRepresentation)
+	if ( !is.null(from[["spectrumRepresentation"]]) ) {
+		id <- ms$id[ms$name %in% from[["spectrumRepresentation"]]]
+		fileContent[[id]] <- .cvparam("MS", id, from[["spectrumRepresentation"]])
 	} else {
 		stop("missing spectrumRepresentation")
 	}
 	# get (optional) contact information
 	contact <- structure(list(), class="imzplist")
-	if ( !is.null(from$contactName) ) {
-		id <- .get_all_meta_tags()$contactName
-		contact[[id]] <- .cvparam("MS", id, ms$name[id], from$contactName)
+	if ( !is.null(from[["contactName"]]) ) {
+		id <- .get_all_meta_tags()[["contactName"]]
+		contact[[id]] <- .cvparam("MS", id, ms$name[id], from[["contactName"]])
 	}
-	if ( !is.null(from$contactAffiliation) ) {
-		id <- .get_all_meta_tags()$contactAffiliation
-		contact[[id]] <- .cvparam("MS", id, ms$name[id], from$contactAffiliation)
+	if ( !is.null(from[["contactAffiliation"]]) ) {
+		id <- .get_all_meta_tags()[["contactAffiliation"]]
+		contact[[id]] <- .cvparam("MS", id, ms$name[id], from[["contactAffiliation"]])
 	}
-	if ( !is.null(from$contactEmail) ) {
-		id <- .get_all_meta_tags()$contactEmail
-		contact[[id]] <- .cvparam("MS", id, ms$name[id], from$contactEmail)
+	if ( !is.null(from[["contactEmail"]]) ) {
+		id <- .get_all_meta_tags()[["contactEmail"]]
+		contact[[id]] <- .cvparam("MS", id, ms$name[id], from[["contactEmail"]])
 	}
 	# return file description
 	if ( length(contact) > 0L ) {
@@ -303,29 +313,29 @@ setMethod("show", "ImzMeta", function(object) {
 	ims <- get_obo("ims")
 	scanSettings <- structure(list(), id=ssid, class="imzplist")
 	# get line scan sequence (e.g., top down)
-	if ( !is.null(from$lineScanSequence) ) {
-		id <- ims$id[ims$name %in% from$lineScanSequence]
-		scanSettings[[id]] <- .cvparam("IMS", id, from$lineScanSequence)
+	if ( !is.null(from[["lineScanSequence"]]) ) {
+		id <- ims$id[ims$name %in% from[["lineScanSequence"]]]
+		scanSettings[[id]] <- .cvparam("IMS", id, from[["lineScanSequence"]])
 	}
 	# get scan pattern (e.g., meandering, flyback, etc.)
-	if ( !is.null(from$scanPattern) ) {
-		id <- ims$id[ims$name %in% from$scanPattern]
-		scanSettings[[id]] <- .cvparam("IMS", id, from$scanPattern)
+	if ( !is.null(from[["scanPattern"]]) ) {
+		id <- ims$id[ims$name %in% from[["scanPattern"]]]
+		scanSettings[[id]] <- .cvparam("IMS", id, from[["scanPattern"]])
 	}
 	# get scan type (e.g., horizontal line scan)
-	if ( !is.null(from$scanType) ) {
-		id <- ims$id[ims$name %in% from$scanType]
-		scanSettings[[id]] <- .cvparam("IMS", id, from$scanType)
+	if ( !is.null(from[["scanType"]]) ) {
+		id <- ims$id[ims$name %in% from[["scanType"]]]
+		scanSettings[[id]] <- .cvparam("IMS", id, from[["scanType"]])
 	}
 	# get line scan direction (e.g., line scan left right)
-	if ( !is.null(from$lineScanDirection) ) {
-		id <- ims$id[ims$name %in% from$lineScanDirection]
-		scanSettings[[id]] <- .cvparam("IMS", id, from$lineScanDirection)
+	if ( !is.null(from[["lineScanDirection"]]) ) {
+		id <- ims$id[ims$name %in% from[["lineScanDirection"]]]
+		scanSettings[[id]] <- .cvparam("IMS", id, from[["lineScanDirection"]])
 	}
 	# get pixel size (in micrometers)
-	if ( !is.null(from$pixelSize) ) {
-		id <- .get_all_meta_tags()$pixelSize
-		scanSettings[[id]] <- .cvparam("IMS", id, ims$name[id], from$pixelSize)
+	if ( !is.null(from[["pixelSize"]]) ) {
+		id <- .get_all_meta_tags()[["pixelSize"]]
+		scanSettings[[id]] <- .cvparam("IMS", id, ims$name[id], from[["pixelSize"]])
 	}
 	# return scan settings list
 	if ( length(scanSettings) > 0L ) {
@@ -364,41 +374,41 @@ setMethod("show", "ImzMeta", function(object) {
 .instrumentConfigurationList_from_meta <- function(from)
 {
 	ms <- get_obo("ms")
-	icid <- paste0(gsub(" ", "", from$instrumentModel), "1")
+	icid <- paste0(gsub(" ", "", from[["instrumentModel"]]), "1")
 	instrumentConfiguration <- structure(list(), id=icid, class="imzplist")
-	if ( !is.null(from$instrumentModel) ) {
-		id <- ms$id[ms$name %in% from$instrumentModel]
+	if ( !is.null(from[["instrumentModel"]]) ) {
+		id <- ms$id[ms$name %in% from[["instrumentModel"]]]
 		instrumentConfiguration[[id]] <- .cvparam("MS", id, ms$name[id])
 	}
 	componentList <- list()
 	order <- 0L
 	# get ion source
-	if ( !is.null(from$ionSource) ) {
+	if ( !is.null(from[["ionSource"]]) ) {
 		order <- order + 1L
 		source <- structure(list(), order=paste0(order), class="imzplist")
-		id <- ms$id[ms$name %in% from$ionSource]
-		source[[id]] <- .cvparam("MS", id, from$ionSource)
-		componentList$source <- source
+		id <- ms$id[ms$name %in% from[["ionSource"]]]
+		source[[id]] <- .cvparam("MS", id, from[["ionSource"]])
+		componentList[["source"]] <- source
 	}
 	# get mass analyzer
-	if ( !is.null(from$analyzer) ) {
+	if ( !is.null(from[["analyzer"]]) ) {
 		order <- order + 1L
 		analyzer <- structure(list(), order=paste0(order), class="imzplist")
-		id <- ms$id[ms$name %in% from$analyzer]
-		analyzer[[id]] <- .cvparam("MS", id, from$analyzer)
-		componentList$analyzer <- analyzer
+		id <- ms$id[ms$name %in% from[["analyzer"]]]
+		analyzer[[id]] <- .cvparam("MS", id, from[["analyzer"]])
+		componentList[["analyzer"]] <- analyzer
 	}
 	# get detector type
-	if ( !is.null(from$detectorType) ) {
+	if ( !is.null(from[["detectorType"]]) ) {
 		order <- order + 1L
 		detector <- structure(list(), order=paste0(order), class="imzplist")
-		id <- ms$id[ms$name %in% from$detectorType]
-		detector[[id]] <- .cvparam("MS", id, from$detectorType)
-		componentList$detector <- detector
+		id <- ms$id[ms$name %in% from[["detectorType"]]]
+		detector[[id]] <- .cvparam("MS", id, from[["detectorType"]])
+		componentList[["detector"]] <- detector
 	}
 	# return instrument configuration list
 	if ( order > 0L )
-		instrumentConfiguration$componentList <- componentList
+		instrumentConfiguration[["componentList"]] <- componentList
 	if ( length(instrumentConfiguration) > 0L ) {
 		setNames(list(instrumentConfiguration), icid)
 	} else {
@@ -426,9 +436,9 @@ setMethod("show", "ImzMeta", function(object) {
 {
 	dataProcessingList <- .dataProcessingList_default()
 	ms <- get_obo("ms")
-	for ( processing in from$dataProcessing ) {
-		id <- ms$id[ms$name %in% from$processing]
-		dataProcessingList[[1L]][[1L]][[id]] <- .cvparam("MS", id, from$processing)
+	for ( processing in rev(from$dataProcessing) ) {
+		id <- ms$id[ms$name %in% processing]
+		dataProcessingList[[1L]][[1L]][[id]] <- .cvparam("MS", id, processing)
 	}
 	dataProcessingList
 }

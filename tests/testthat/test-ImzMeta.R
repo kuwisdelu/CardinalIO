@@ -48,4 +48,15 @@ test_that("ImzMeta/ImzML conversion", {
 	expect_in(find_term("MS1 spectrum", "ms", "accession"), names(fc))
 	expect_in(find_term("profile spectrum", "ms", "accession"), names(fc))
 
+	e$dataProcessing <- c("baseline reduction", "peak picking")
+	
+	p3 <- as(e, "ImzML")
+	dp1 <- p3$dataProcessingList[[1L]][[1L]]
+
+	expect_true(validObject(p3))
+	expect_length(dp1, 3L)
+	expect_in(find_term("Conversion to mzML", "ms", "accession"), names(dp1))
+	expect_in(find_term("peak picking", "ms", "accession"), names(dp1))
+	expect_in(find_term("baseline reduction", "ms", "accession"), names(dp1))
+
 })

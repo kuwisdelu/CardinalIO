@@ -51,12 +51,17 @@ exampleImzMLFile(type = c("continuous", "processed"))
 
 \author{Kylie A. Bemis}
 
+\seealso{
+    \code{\link{ImzMeta}},
+    \code{\link{writeImzML}}
+}
+
 \examples{
 # get the path to an example imzML file
 path <- exampleImzMLFile()
 
 # parse the file
-p <- parseImzML(path, extra="total ion current")
+p <- parseImzML(path, ibd=TRUE, extra="total ion current")
 print(p)
 
 # get the spectra positions
@@ -64,6 +69,10 @@ p$run$spectrumList$positions
 
 # get the TIC
 p$run$spectrumList$extra
+
+# get the m/z and intensity arrays
+p$ibd$mz
+p$ibd$intensity
 }
 
 \keyword{IO}

@@ -41,17 +41,17 @@ setMethod("writeImzML", "ImzMeta",
 			stop("positions must have 2 or 3 columns")
 		}
 		if ( "spectrumList" %in% names(object$run) ) {
-			object$run$spectrumList$positions <- positions
+			object[["run"]][["spectrumList"]][["positions"]] <- positions
 		} else {
-			object$run$spectrumList <- list(positions=positions)
+			object[["run"]][["spectrumList"]] <- list(positions=positions)
 		}
 	}
 	# process binary data arrays
 	if ( !is.null(mz) && !is.null(intensity) )
 	{
-		if ( is.null(object$run$spectrumList$positions) )
+		if ( is.null(object[["run"]][["spectrumList"]][["positions"]]) )
 			stop("missing required component $run$spectrumList$positions")
-		n <- nrow(object$run$spectrumList$positions)
+		n <- nrow(object[["run"]][["spectrumList"]][["positions"]])
 		if ( is.null(dim(intensity)) && length(intensity) != n )
 			stop("rows of 'positions' does not match length of 'intensity'")
 		if ( !is.null(dim(intensity)) && ncol(intensity) != n )
@@ -242,10 +242,10 @@ setMethod("writeImzML", "ImzMeta",
 	meta <- .getIbdMetadataFromMatter(mz, intensity, algo)
 	type_ids <- c("IMS:1000030", "IMS:1000031")
 	hash_ids <- c("IMS:1000090", "IMS:1000091", "IMS:1000092")
-	if ( any(type_ids %in% names(metadata$fileDescription$fileContent)) )
-		metadata$fileDescription$fileContent[type_ids] <- NULL
-	if ( any(hash_ids %in% names(metadata$fileDescription$fileContent)) )
-		metadata$fileDescription$fileContent[hash_ids] <- NULL
+	if ( any(type_ids %in% names(metadata[["fileDescription"]][["fileContent"]])) )
+		metadata[["fileDescription"]][["fileContent"]][type_ids] <- NULL
+	if ( any(hash_ids %in% names(metadata[["fileDescription"]][["fileContent"]])) )
+		metadata[["fileDescription"]][["fileContent"]][hash_ids] <- NULL
 	type <- switch(meta$type,
 		continuous=.cvparam(cv="IMS", id="IMS:1000030", name="continuous"),
 		processed=.cvparam(cv="IMS", id="IMS:1000031", name="processed"))
@@ -258,11 +258,11 @@ setMethod("writeImzML", "ImzMeta",
 			name="ibd SHA-1", value=meta$checksum),
 		sha256=.cvparam(cv="IMS", id="IMS:1000092",
 			name="ibd SHA-256", value=meta$checksum))
-	metadata$fileDescription$fileContent[[type["id"]]] <- type
-	metadata$fileDescription$fileContent[[uuid["id"]]] <- uuid
-	metadata$fileDescription$fileContent[[checksum["id"]]] <- checksum
-	metadata$run$spectrumList$mzArrays <- meta$mzArrays
-	metadata$run$spectrumList$intensityArrays <- meta$intensityArrays
+	metadata[["fileDescription"]][["fileContent"]][[type["id"]]] <- type
+	metadata[["fileDescription"]][["fileContent"]][[uuid["id"]]] <- uuid
+	metadata[["fileDescription"]][["fileContent"]][[checksum["id"]]] <- checksum
+	metadata[["run"]][["spectrumList"]][["mzArrays"]] <- meta$mzArrays
+	metadata[["run"]][["spectrumList"]][["intensityArrays"]] <- meta$intensityArrays
 	metadata
 }
 
@@ -338,56 +338,37 @@ setMethod("writeImzML", "ImzMeta",
 .deparse_fileDescription <- function(object) {
 	tagname <- "fileDescription"
 	tag <- object[[tagname]]
-	if ( length(tag) > 0L ) {
-		fileContent <- .deparse_imzplist(tag[["fileContent"]], "fileContent")
-		sourceFileList <- .deparse_taglist(tag[["sourceFileList"]], "sourceFileList", "sourceFile")
-		contact <- .deparse_imzplist(tag[["contact"]], "contact")
-		sprintf('<%s>\n%s%s%s</%s>\n',
-			tagname, fileContent, sourceFileList, contact, tagname)
-	} else {
+	if ( length(tag) == 0L )
 		stop("fileDescription is missing with no default")
-	}
+	fileContent <- .deparse_imzplist(tag[["fileContent"]], "fileContent")
+	sourceFileList <- .deparse_taglist(tag[["sourceFileList"]], "sourceFileList", "sourceFile")
+	contact <- .deparse_imzplist(tag[["contact"]], "contact")
+	sprintf('<%s>\n%s%s%s</%s>\n',
+		tagname, fileContent, sourceFileList, contact, tagname)
 }
 
 # optional
 .deparse_sampleList <- function(object) {
 	tag <- object[["sampleList"]]
-	if ( length(tag) > 0L ) {
-		.deparse_taglist(tag, "sampleList", "sample")
-	} else {
-		""
-	}
+	if ( length(tag) == 0L )
+		return("")
+	.deparse_taglist(tag, "sampleList", "sample")
 }
 
 # optional
 .deparse_scanSettingsList <- function(object) {
 	tag <- object[["scanSettingsList"]]
-	if ( length(tag) > 0L ) {
-		.deparse_taglist(tag, "scanSettingsList", "scanSettings")
-	} else {
-		""
-	}
+	if ( length(tag) == 0L )
+		return("")
+	.deparse_taglist(tag, "scanSettingsList", "scanSettings")
 }
 
 # required
 .deparse_softwareList <- function(object) {
 	tag <- object[["softwareList"]]
-	if ( length(tag) > 0L ) {
-		.deparse_taglist(tag, "softwareList", "software")
-	} else {
-		if ( isNamespaceLoaded("Cardinal") ) {
-			package <- "Cardinal"
-		} else {
-			package <- "CardinalIO"
-		}
-		sprintf(
-			'<softwareList count="1">
-				<software id="%s" version="%s">
-					<cvParam cvRef="MS" accession="MS:1000799" name="custom unreleased software tool" value="%s"/>
-				</software>
-			</softwareList>
-			', package, packageVersion(package), package)
-	}
+	if ( length(tag) == 0L )
+		tag <- .softwareList_default()
+	.deparse_taglist(tag, "softwareList", "software")
 }
 
 # part of instrumentConfigurationList
@@ -417,20 +398,12 @@ setMethod("writeImzML", "ImzMeta",
 # required
 .deparse_instrumentConfigurationList <- function(object) {
 	tagname <- "instrumentConfigurationList"
-	tag <- object[["instrumentConfigurationList"]]
-	if ( length(tag) > 0L ) {
-		tags <- Map(.deparse_instrumentConfiguration, unname(tag), names(tag))
-		tags <- paste0(unlist(tags), collapse="")
-		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
-	} else {
-		sprintf(
-			'<instrumentConfigurationList count="1">
-				<instrumentConfiguration id="%s">
-					<cvParam cvRef="MS" accession="MS:1000031" name="instrument model"/>
-			    </instrumentConfiguration>
-			</instrumentConfigurationList>
-			', .get_defaultInstrumentConfigurationRef(NULL))
-	}
+	tag <- object[[tagname]]
+	if ( length(tag) == 0L )
+		tag <- .instrumentConfigurationList_default()
+	tags <- Map(.deparse_instrumentConfiguration, unname(tag), names(tag))
+	tags <- paste0(unlist(tags), collapse="")
+	sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
 }
 
 # part of dataProcessingList
@@ -445,27 +418,12 @@ setMethod("writeImzML", "ImzMeta",
 # required
 .deparse_dataProcessingList <- function(object) {
 	tagname <- "dataProcessingList"
-	tag <- object[["dataProcessingList"]]
-	if ( length(tag) > 0L ) {
-		tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
-		tags <- paste0(unlist(tags), collapse="")
-		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
-	} else {
-		if ( isNamespaceLoaded("Cardinal") ) {
-			package <- "Cardinal"
-		} else {
-			package <- "CardinalIO"
-		}
-		sprintf(
-			'<dataProcessingList count="1">
-				<dataProcessing id="%s">
-					<processingMethod order="1" softwareRef="%s">
-						<cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML"/>
-					</processingMethod>
-				</dataProcessing>
-			</dataProcessingList>
-			', .get_defaultDataProcessingRef(NULL), package)
-	}
+	tag <- object[[tagname]]
+	if ( length(tag) == 0L )
+		tag <- .dataProcessingList_default()
+	tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
+	tags <- paste0(unlist(tags), collapse="")
+	sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
 }
 
 #### Construct imzML skeleton ####
@@ -538,16 +496,16 @@ setMethod("writeImzML", "ImzMeta",
 .get_defaultInstrumentConfigurationRef <- function(object) {
 	tag <- object[["instrumentConfigurationList"]]
 	if ( length(tag) > 0L ) {
-		names(tag)[1L]
+		names(object[["instrumentConfigurationList"]])[1L]
 	} else {
 		"IC1"
 	}
 }
 
 .get_defaultDataProcessingRef <- function(object) {
-	tag <- object[["dataProcessingList"]]
+	tag <- 
 	if ( length(tag) > 0L ) {
-		names(tag)[1L]
+		names(object[["dataProcessingList"]])[1L]
 	} else {
 		"CardinalProcessing"
 	}
@@ -580,15 +538,26 @@ setMethod("writeImzML", "ImzMeta",
 	intensity.type <- unique(intensityArrays[["binary data type"]])
 	if ( length(intensity.type) != 1L )
 		stop("couldn't determine intensity array binary data type")
+	# get references
+	referenceableParamGroupList <- .new_referenceableParamGroupList(representation, mz.type, intensity.type)
+	if ( length(object[["instrumentConfigurationList"]]) > 0L ) {
+		defaultInstrumentConfigurationRef <- names(object[["instrumentConfigurationList"]])[1L]
+	} else {
+		defaultInstrumentConfigurationRef <- names(.instrumentConfigurationList_default())[1L]
+	}
+	if ( length(object[["dataProcessingList"]]) > 0L ) {
+		defaultDataProcessingRef <- names(object[["dataProcessingList"]])[1L]
+	} else {
+		defaultDataProcessingRef <- names(.dataProcessingList_default())[1L]
+	}
 	# get # of spectra
 	n <- nrow(object[["run"]][["spectrumList"]][["positions"]])
 	# create the imzML skeleton
-	referenceableParamGroupList <- .new_referenceableParamGroupList(representation, mz.type, intensity.type)
 	sprintf(.imzML_skeleton, fileDescription, referenceableParamGroupList,
 		sampleList, scanSettingsList, softwareList,
 		instrumentConfigurationList, dataProcessingList,
-		.get_defaultInstrumentConfigurationRef(object), n,
-		.get_defaultDataProcessingRef(object))
+		defaultInstrumentConfigurationRef,
+		defaultDataProcessingRef, n)
 }
 
 .imzML_skeleton <-
@@ -600,7 +569,7 @@ setMethod("writeImzML", "ImzMeta",
 		</cvList>
 		%s%s%s%s%s%s%s
 		<run id="Experiment01" defaultInstrumentConfigurationRef="%s">
-			<spectrumList count="%d" defaultDataProcessingRef="%s">
+			<spectrumList defaultDataProcessingRef="%s" count="%d">
 				<spectrum id="Spectrum=1" defaultArrayLength="0" index="1">
 					<referenceableParamGroupRef ref="spectrum1"/>
 					<scanList count="1">
