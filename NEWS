@@ -1,4 +1,12 @@
 
+CHANGES IN VERSION 0.5.0 [2023-8-11]
+------------------------------------
+
+NEW FEATURES
+
+    o New 'writeImzML()' method for 'ImzMeta'
+    o Support for writing the ".ibd" file
+
 CHANGES IN VERSION 0.4.0 [2023-8-10]
 ------------------------------------
 
@@ -20,7 +28,7 @@ CHANGES IN VERSION 0.2.0 [2023-8-7]
 
 NEW FEATURES
 
-    o Added writeImzML() method
+    o Added 'writeImzML()' method
 
 CHANGES IN VERSION 0.1.0 [2023-8-2]
 -----------------------------------
