@@ -8,16 +8,16 @@ setMethod("writeImzML", "ImzML",
 	function(object, file, positions = NULL, mz = NULL, intensity = NULL,
 		mz.type = "float32", intensity.type = "float32", asis = FALSE, ...)
 	{
-		.writeIbdAndImzML(object, file=file, positions=positions,
-			mz=mz, intensity=intensity,
-			mz.type=mz.type, intensity.type=intensity.type,
-			asis=asis)
+		.writeIbdAndImzML(object, file=file,
+			positions=positions, mz=mz, intensity=intensity,
+			mz.type=mz.type, intensity.type=intensity.type, asis=asis)
 	})
 
 setMethod("writeImzML", "ImzMeta", 
-	function(object, file, ...)
+	function(object, file, positions, mz, intensity, ...)
 	{
-		writeImzML(as(object, "ImzML"), file=file, ...)
+		writeImzML(as(object, "ImzML"), file=file,
+			positions=positions, mz=mz, intensity=intensity, ...)
 	})
 
 .writeIbdAndImzML <- function(object, file, positions,
