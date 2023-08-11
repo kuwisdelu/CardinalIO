@@ -32,6 +32,17 @@ test_that("writeImzML - continuous", {
 	expect_error(writeImzML(p3))
 	expect_error(writeImzML(p3, path3))
 
+	p4 <- p2
+	p4$sampleList <- list()
+	p4$scanSettingsList <- list()
+	p4$softwareList <- list()
+	p4$instrumentConfigurationList <- list()
+	p4$dataProcessingList <- list()
+
+	success <- writeImzML(p4, path3)
+
+	expect_true(success)
+
 })
 
 test_that("writeImzML - processed", {
@@ -63,12 +74,24 @@ test_that("writeImzML - processed", {
 	expect_error(writeImzML(p3))
 	expect_error(writeImzML(p3, path3))
 
+	p4 <- p2
+	p4$sampleList <- list()
+	p4$scanSettingsList <- list()
+	p4$softwareList <- list()
+	p4$instrumentConfigurationList <- list()
+	p4$dataProcessingList <- list()
+
+	success <- writeImzML(p4, path3)
+
+	expect_true(success)
+
 })
 
 test_that("writeImzML + ibd - continuous", {
 
 	path <- exampleImzMLFile("continuous")
 	path2 <- tempfile(fileext=".imzML")
+	path3 <- tempfile(fileext=".imzML")
 
 	p <- parseImzML(path, ibd=TRUE)
 	
@@ -76,7 +99,7 @@ test_that("writeImzML + ibd - continuous", {
 	intensity <- do.call(cbind, as.list(p$ibd$intensity))
 	positions <- p$run$spectrumList$positions
 	
-	writeImzML(p, path2, positions=positions,
+	success <- writeImzML(p, path2, positions=positions,
 		mz=mz, intensity=intensity)
 
 	p2 <- parseImzML(path2, ibd=TRUE)
@@ -93,13 +116,21 @@ test_that("writeImzML + ibd - continuous", {
 	intensity3 <- p2$ibd$intensity
 	positions3 <- p2$run$spectrumList$positions
 
-	writeImzML(p, path2, positions=positions,
+	success <- writeImzML(p, path2, positions=positions,
 		mz=mz3, intensity=intensity3, asis=TRUE)
 	
 	p3 <- parseImzML(path2, ibd=TRUE)
 	expect_identical(
 		p2$fileDescription$fileContent,
 		p3$fileDescription$fileContent)
+
+	e <- ImzMeta(spectrumType="MS1 spectrum",
+		spectrumRepresentation="profile spectrum")
+
+	success <- writeImzML(e, path3, positions=positions,
+		mz=mz, intensity=intensity)
+
+	expect_true(success)
 
 })
 
@@ -107,6 +138,7 @@ test_that("writeImzML + ibd - processed", {
 
 	path <- exampleImzMLFile("processed")
 	path2 <- tempfile(fileext=".imzML")
+	path3 <- tempfile(fileext=".imzML")
 
 	p <- parseImzML(path, ibd=TRUE)
 	
@@ -114,7 +146,7 @@ test_that("writeImzML + ibd - processed", {
 	intensity <- do.call(cbind, as.list(p$ibd$intensity))
 	positions <- p$run$spectrumList$positions
 	
-	writeImzML(p, path2, positions=positions,
+	success <- writeImzML(p, path2, positions=positions,
 		mz=mz, intensity=intensity)
 
 	p2 <- parseImzML(path2, ibd=TRUE)
@@ -131,13 +163,21 @@ test_that("writeImzML + ibd - processed", {
 	intensity3 <- p2$ibd$intensity
 	positions3 <- p2$run$spectrumList$positions
 
-	writeImzML(p, path2, positions=positions,
+	success <- writeImzML(p, path2, positions=positions,
 		mz=mz3, intensity=intensity3, asis=TRUE)
 	
 	p3 <- parseImzML(path2, ibd=TRUE)
 	expect_identical(
 		p2$fileDescription$fileContent,
 		p3$fileDescription$fileContent)
+
+	e <- ImzMeta(spectrumType="MS1 spectrum",
+		spectrumRepresentation="profile spectrum")
+
+	success <- writeImzML(e, path3, positions=positions,
+		mz=mz, intensity=intensity)
+
+	expect_true(success)
 
 })
 

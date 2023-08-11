@@ -14,6 +14,12 @@ setMethod("writeImzML", "ImzML",
 			asis=asis)
 	})
 
+setMethod("writeImzML", "ImzMeta", 
+	function(object, file, ...)
+	{
+		writeImzML(as(object, "ImzML"), file=file, ...)
+	})
+
 .writeIbdAndImzML <- function(object, file, positions,
 	mz, intensity, mz.type, intensity.type, asis)
 {
@@ -304,7 +310,7 @@ setMethod("writeImzML", "ImzML",
 }
 
 .deparse_imzplist <- function(x, name) {
-	if ( is.null(x) )
+	if ( length(x) == 0L )
 		return("")
 	tags <- .deparse_params(x)
 	a <- .xml_attr(x)
@@ -317,7 +323,7 @@ setMethod("writeImzML", "ImzML",
 }
 
 .deparse_taglist <- function(x, tagname, names) {
-	if ( is.null(x) )
+	if ( length(x) == 0L )
 		return("")
 	names <- rep_len(names, length(x))
 	plists <- Map(.deparse_imzplist, unname(x), names)
@@ -332,29 +338,43 @@ setMethod("writeImzML", "ImzML",
 .deparse_fileDescription <- function(object) {
 	tagname <- "fileDescription"
 	tag <- object[[tagname]]
-	if ( is.null(tag) )
+	if ( length(tag) > 0L ) {
+		fileContent <- .deparse_imzplist(tag[["fileContent"]], "fileContent")
+		sourceFileList <- .deparse_taglist(tag[["sourceFileList"]], "sourceFileList", "sourceFile")
+		contact <- .deparse_imzplist(tag[["contact"]], "contact")
+		sprintf('<%s>\n%s%s%s</%s>\n',
+			tagname, fileContent, sourceFileList, contact, tagname)
+	} else {
 		stop("fileDescription is missing with no default")
-	fileContent <- .deparse_imzplist(tag[["fileContent"]], "fileContent")
-	sourceFileList <- .deparse_taglist(tag[["sourceFileList"]], "sourceFileList", "sourceFile")
-	contact <- .deparse_imzplist(tag[["contact"]], "contact")
-	sprintf('<%s>\n%s%s%s</%s>\n',
-		tagname, fileContent, sourceFileList, contact, tagname)
+	}
 }
 
 # optional
 .deparse_sampleList <- function(object) {
-	.deparse_taglist(object[["sampleList"]], "sampleList", "sample")
+	tag <- object[["sampleList"]]
+	if ( length(tag) > 0L ) {
+		.deparse_taglist(tag, "sampleList", "sample")
+	} else {
+		""
+	}
 }
 
 # optional
 .deparse_scanSettingsList <- function(object) {
-	.deparse_taglist(object[["scanSettingsList"]], "scanSettingsList", "scanSettings")
+	tag <- object[["scanSettingsList"]]
+	if ( length(tag) > 0L ) {
+		.deparse_taglist(tag, "scanSettingsList", "scanSettings")
+	} else {
+		""
+	}
 }
 
 # required
 .deparse_softwareList <- function(object) {
 	tag <- object[["softwareList"]]
-	if ( is.null(tag) ) {
+	if ( length(tag) > 0L ) {
+		.deparse_taglist(tag, "softwareList", "software")
+	} else {
 		if ( isNamespaceLoaded("Cardinal") ) {
 			package <- "Cardinal"
 		} else {
@@ -367,8 +387,6 @@ setMethod("writeImzML", "ImzML",
 				</software>
 			</softwareList>
 			', package, packageVersion(package), package)
-	} else {
-		.deparse_taglist(tag, "softwareList", "software")
 	}
 }
 
@@ -377,7 +395,7 @@ setMethod("writeImzML", "ImzML",
 	tagname <- "instrumentConfiguration"
 	params <- .deparse_params(x)
 	componentList <- x[["componentList"]]
-	if ( !is.null(componentList) ) {
+	if ( length(componentList) > 0L ) {
 		tags <- Map(.deparse_imzplist,
 			unname(componentList), names(componentList))
 		tags <- paste0(unlist(tags), collapse="")
@@ -387,7 +405,7 @@ setMethod("writeImzML", "ImzML",
 		componentList <- ""
 	}
 	softwareRef <- x[["softwareRef"]]
-	if ( !is.null(softwareRef) ) {
+	if ( length(softwareRef) > 0L ) {
 		softwareRef <- sprintf('<softwareRef ref="%s"/>\n', softwareRef)
 	} else {
 		softwareRef <- ""
@@ -400,7 +418,11 @@ setMethod("writeImzML", "ImzML",
 .deparse_instrumentConfigurationList <- function(object) {
 	tagname <- "instrumentConfigurationList"
 	tag <- object[["instrumentConfigurationList"]]
-	if ( is.null(tag) ) {
+	if ( length(tag) > 0L ) {
+		tags <- Map(.deparse_instrumentConfiguration, unname(tag), names(tag))
+		tags <- paste0(unlist(tags), collapse="")
+		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
+	} else {
 		sprintf(
 			'<instrumentConfigurationList count="1">
 				<instrumentConfiguration id="%s">
@@ -408,11 +430,6 @@ setMethod("writeImzML", "ImzML",
 			    </instrumentConfiguration>
 			</instrumentConfigurationList>
 			', .get_defaultInstrumentConfigurationRef(NULL))
-		
-	} else {
-		tags <- Map(.deparse_instrumentConfiguration, unname(tag), names(tag))
-		tags <- paste0(unlist(tags), collapse="")
-		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
 	}
 }
 
@@ -429,7 +446,11 @@ setMethod("writeImzML", "ImzML",
 .deparse_dataProcessingList <- function(object) {
 	tagname <- "dataProcessingList"
 	tag <- object[["dataProcessingList"]]
-	if ( is.null(tag) ) {
+	if ( length(tag) > 0L ) {
+		tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
+		tags <- paste0(unlist(tags), collapse="")
+		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
+	} else {
 		if ( isNamespaceLoaded("Cardinal") ) {
 			package <- "Cardinal"
 		} else {
@@ -444,10 +465,6 @@ setMethod("writeImzML", "ImzML",
 				</dataProcessing>
 			</dataProcessingList>
 			', .get_defaultDataProcessingRef(NULL), package)
-	} else {
-		tags <- Map(.deparse_dataProcessing, unname(tag), names(tag))
-		tags <- paste0(unlist(tags), collapse="")
-		sprintf('<%s count="%d">\n%s</%s>\n', tagname, length(tag), tags, tagname)
 	}
 }
 
@@ -520,19 +537,19 @@ setMethod("writeImzML", "ImzML",
 
 .get_defaultInstrumentConfigurationRef <- function(object) {
 	tag <- object[["instrumentConfigurationList"]]
-	if ( is.null(tag) ) {
-		"IC1"
-	} else {
+	if ( length(tag) > 0L ) {
 		names(tag)[1L]
+	} else {
+		"IC1"
 	}
 }
 
 .get_defaultDataProcessingRef <- function(object) {
 	tag <- object[["dataProcessingList"]]
-	if ( is.null(tag) ) {
-		"CardinalProcessing"
-	} else {
+	if ( length(tag) > 0L ) {
 		names(tag)[1L]
+	} else {
+		"CardinalProcessing"
 	}
 }
 

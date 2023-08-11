@@ -343,8 +343,9 @@ setMethod("show", "ImzMeta", function(object) {
 		package <- "CardinalIO"
 	}
 	ms <- get_obo("ms")
+	version <- format(packageVersion(package))
 	software <- structure(list(), id=package,
-		version=packageVersion(package), class="imzplist")
+		version=version, class="imzplist")
 	id <- "MS:1000799"
 	software[[id]] <- .cvparam("MS", id, ms$name[id], package)
 	setNames(list(software), package)
@@ -353,9 +354,9 @@ setMethod("show", "ImzMeta", function(object) {
 .instrumentConfigurationList_default <- function()
 {
 	ms <- get_obo("ms")
-	icid <- "ic1"
+	icid <- "IC1"
+	id <- "MS:1000031" # default "instrument model"
 	instrumentConfiguration <- structure(list(), id=icid, class="imzplist")
-	id <- "MS:1000031"
 	instrumentConfiguration[[id]] <- .cvparam("MS", id, ms$name[id])
 	setNames(list(instrumentConfiguration), icid)
 }
@@ -413,10 +414,10 @@ setMethod("show", "ImzMeta", function(object) {
 		package <- "CardinalIO"
 	}
 	ms <- get_obo("ms")
+	id <- "MS:1000544" # default "Conversion to mzML"
 	processingMethod <- structure(list(), order=paste0(1),
 		softwareRef=package, class="imzplist")
-	id <- "MS:1000544"
-	processingMethod[[id]] <- .cvparam("MS", id, ms$name[id], package)
+	processingMethod[[id]] <- .cvparam("MS", id, ms$name[id])
 	dataProcessing <- setNames(list(processingMethod), package)
 	setNames(list(dataProcessing), "CardinalProcessing")
 }
