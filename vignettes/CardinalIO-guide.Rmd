@@ -211,6 +211,12 @@ p$ibd$intensity
 
 These out-of-memory lists can be subset like normal lists. They can alternatively be pulled fully into memory using `as.list()`.
 
+```{r ibd-spectra-plot}
+mz1 <- p$ibd$mz[[1L]]
+int1 <- p$ibd$intensity[[1L]]
+plot(mz1, int1, type="l", xlab="m/z", ylab="Intensity")
+```
+
 
 
 
