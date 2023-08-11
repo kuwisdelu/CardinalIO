@@ -125,11 +125,11 @@ test_that("parseImzML - ibd/extra", {
 	p <- parseImzML(path, ibd=TRUE, extra="total ion current")
 	p2 <- parseImzML(path2, ibd=TRUE, extra="total ion current")
 	
-	m <- as.list(mz(p))
-	m2 <- as.list(mz(p2))
+	m <- as.list(p$ibd$mz)
+	m2 <- as.list(p2$ibd$mz)
 
-	i <- as.list(intensity(p))
-	i2 <- as.list(intensity(p2))
+	i <- as.list(p$ibd$intensity)
+	i2 <- as.list(p2$ibd$intensity)
 
 	expect_equal(m, m2)
 	expect_equal(i, i2)

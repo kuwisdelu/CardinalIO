@@ -21,14 +21,6 @@ setClass("ImzML", contains = "SimpleList")
 
 setValidity("ImzML", .valid_ImzML)
 
-setMethod("path", "ImzML", function(object) metadata(object)[["source"]])
-
-setMethod("mz", "ImzML", function(object) object[["ibd"]][["mz"]])
-
-setMethod("intensity", "ImzML", function(object) object[["ibd"]][["intensity"]])
-
-setMethod("checksum", "ImzML", function(x, ...) attr(x[["ibd"]], "checksum"))
-
 # construct new ImzML from arguments
 .new_ImzML <- function(..., validate = TRUE)
 {
@@ -73,7 +65,7 @@ setAs("ImzMeta", "ImzML", function(from) {
 }
 
 setMethod("show", "ImzML", function(object) {
-	cat(class(object), ": ", path(object), "\n\n", sep="")
+	cat(class(object), ": ", metadata(object)[["source"]], "\n\n", sep="")
 	.show_list_names(object, n=7L)
 })
 

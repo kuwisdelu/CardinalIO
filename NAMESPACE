@@ -1,15 +1,11 @@
 
 import("methods")
 
-import("BiocGenerics")
-
-import("ProtGenerics")
-
-import("S4Vectors")
+import("matter")
 
 import("ontologyIndex")
 
-import("matter")
+import("S4Vectors")
 
 importFrom("stats", "setNames")
 
@@ -33,11 +29,6 @@ S3method("print", "imzplist")
 exportClasses(
 	"ImzMeta",
 	"ImzML")
-
-exportMethods(
-	"mz",
-	"intensity",
-	"checksum")
 
 export(
 	"ImzMeta",

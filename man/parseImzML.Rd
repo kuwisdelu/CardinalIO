@@ -4,10 +4,6 @@
 \alias{ImzML}
 \alias{ImzML-class}
 
-\alias{checksum,ImzML-method}
-\alias{mz,ImzML-method}
-\alias{intensity,ImzML-method}
-
 \alias{parseImzML}
 \alias{exampleImzMLFile}
 
