@@ -122,6 +122,10 @@ setMethod("writeImzML", "ImzMeta",
 		stop("missing required component $run$spectrumList$mzArrays")
 	if ( is.null(intensityArrays) )
 		stop("missing required component $run$spectrumList$intensityArrays")
+	if ( !is.null(positions[["position z"]])) {
+		if ( anyNA(positions[["position z"]]) )
+			positions[["position z"]] <- NULL
+	}
 	mzML <- .new_imzML_skeleton(metadata)
 	.Call(C_writeImzML, mzML, positions, mzArrays, intensityArrays, path)
 }

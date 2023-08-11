@@ -38,10 +38,15 @@ test_that("writeImzML - continuous", {
 	p4$softwareList <- list()
 	p4$instrumentConfigurationList <- list()
 	p4$dataProcessingList <- list()
+	p4$run$spectrumList$positions[["position z"]] <- "1"
 
 	success <- writeImzML(p4, path3)
 
 	expect_true(success)
+
+	p4 <- parseImzML(path3)
+
+	expect_setequal(p4$run$spectrumList$positions[["position z"]], "1")
 
 })
 
@@ -80,10 +85,15 @@ test_that("writeImzML - processed", {
 	p4$softwareList <- list()
 	p4$instrumentConfigurationList <- list()
 	p4$dataProcessingList <- list()
+	p4$run$spectrumList$positions[["position z"]] <- "1"
 
 	success <- writeImzML(p4, path3)
 
 	expect_true(success)
+
+	p4 <- parseImzML(path3)
+
+	expect_setequal(p4$run$spectrumList$positions[["position z"]], "1")
 
 })
 

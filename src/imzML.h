@@ -817,7 +817,7 @@ class imzML {
 			SEXP px = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_X_NAME);
 			SEXP py = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_Y_NAME);
 			SEXP pz = VECTOR_ELT_BY_NAME(positions, IMS_POSITION_Z_NAME);
-			bool has_z = Rf_isNull(pz);
+			bool has_z = !Rf_isNull(pz);
 			pugi::xml_node spectrum = first_spectrum();
 			pugi::xml_node scan, x, y, z;
 			pugi::xml_attribute cv, id, name, value;

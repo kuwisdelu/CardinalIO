@@ -1,4 +1,11 @@
 
+CHANGES IN VERSION 0.6.0 [2023-8-11]
+------------------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Update vignette to include writing imzML files
+
 CHANGES IN VERSION 0.5.0 [2023-8-11]
 ------------------------------------
 
