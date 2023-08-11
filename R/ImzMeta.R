@@ -160,6 +160,8 @@ setAs("list", "ImzMeta", function(from) {
 .new_ImzMeta <- function(..., validate = TRUE)
 {
 	args <- list(...)
+	if ( length(args) == 1L && (is.list(args[[1L]]) || is(args[[1L]], "List")) )
+		args <- args[[1L]]
 	object <- .empty_ImzMeta()
 	for ( nm in names(args) )
 		object[[nm]] <- args[[nm]]

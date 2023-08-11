@@ -167,7 +167,7 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 {
 	path <- normalizePath(file, mustWork=TRUE)
 	if ( file_ext(path) != "imzML" )
-		warning("file ", sQuote(path), " does not end have '.imzML' extension")
+		warning("file ", sQuote(path), " does not have '.imzML' extension")
 	if ( !is.null(extra) && !is.character(extra) )
 		stop("'extra' must be a character vector or NULL")
 	parse <- .Call(C_parseImzML, path, extra)
@@ -197,8 +197,9 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 			}
 			fid <- fileContent[["IMS:1000080"]]
 			uuid <- as.raw(matter_vec(path=binpath, type="raw", length=16L))
-			if ( !isTRUE(raw2hex(uuid) == fid["value"]) )
-				warning("'uuid' tag from imzML file [", fid["value"], "] ",
+			fid_clean <- gsub("[^[:alnum:]]", "", fid["value"])
+			if ( !isTRUE(raw2hex(uuid) == fid_clean) )
+				warning("'uuid' tag from imzML file [", fid_clean, "] ",
 					"does not match 'uuid' bytes from ibd file [", raw2hex(uuid), "]")
 			parse[["ibd"]][["uuid"]] <- uuid
 		}
