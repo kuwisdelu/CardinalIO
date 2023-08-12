@@ -1,4 +1,12 @@
 
+CHANGES IN VERSION 0.99.0 [2023-8-12]
+------------------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Update 'Analyze75' and 'ImzML' classes
+    o Prepare for Bioconductor submission
+
 CHANGES IN VERSION 0.7.0 [2023-8-11]
 ------------------------------------
 
