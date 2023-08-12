@@ -8,7 +8,7 @@ setMethod("writeImzML", "ImzML",
 	function(object, file, positions = NULL, mz = NULL, intensity = NULL,
 		mz.type = "float32", intensity.type = "float32", asis = FALSE, ...)
 	{
-		.writeIbdAndImzML(object, file=file,
+		.write_imzML_and_ibd(object, file=file,
 			positions=positions, mz=mz, intensity=intensity,
 			mz.type=mz.type, intensity.type=intensity.type, asis=asis)
 	})
@@ -20,7 +20,7 @@ setMethod("writeImzML", "ImzMeta",
 			positions=positions, mz=mz, intensity=intensity, ...)
 	})
 
-.writeIbdAndImzML <- function(object, file, positions,
+.write_imzML_and_ibd <- function(object, file, positions,
 	mz, intensity, mz.type, intensity.type, asis)
 {
 	if ( !is.character(file) || length(file) != 1L )
@@ -77,11 +77,11 @@ setMethod("writeImzML", "ImzMeta",
 			allowed_types <- c("int32", "int64", "float32", "float64")
 			mz.type <- match.arg(mz.type, allowed_types)
 			intensity.type <- match.arg(intensity.type, allowed_types)
-			ibd <- .writeIbd(path_ibd, mz=mz, intensity=intensity,
+			ibd <- .write_ibd(path_ibd, mz=mz, intensity=intensity,
 				mz.type=mz.type, intensity.type=intensity.type)
 		}
 		# set ibd metadata
-		object <- .setIbdMetadataFromMatter(object, ibd$mz, ibd$intensity)
+		object <- .set_ibd_metadata_from_matter(object, ibd$mz, ibd$intensity)
 		outpath <- c(path_imzML, path_ibd)
 	} else {
 		if ( !is.null(mz) || !is.null(intensity) )
@@ -89,12 +89,12 @@ setMethod("writeImzML", "ImzMeta",
 		outpath <- path_imzML
 	}
 	# write imzML
-	success <- .writeImzML(path_imzML, metadata=object)
+	success <- .write_imzML(path_imzML, metadata=object)
 	outpath <- normalizePath(outpath, mustWork=TRUE)
 	structure(success, outpath=outpath)
 }
 
-.writeImzML <- function(path, metadata)
+.write_imzML <- function(path, metadata)
 {
 	if ( file_ext(path) != "imzML" )
 		warning("file ", sQuote(path), " does not have '.imzML' extension")
@@ -130,7 +130,7 @@ setMethod("writeImzML", "ImzMeta",
 	.Call(C_writeImzML, mzML, positions, mzArrays, intensityArrays, path)
 }
 
-.writeIbd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_ibd <- function(path, mz, intensity, mz.type, intensity.type)
 {
 	if ( file_ext(path) != "ibd" )
 		warning("file ", sQuote(path), " does not have '.ibd' extension")
@@ -140,13 +140,13 @@ setMethod("writeImzML", "ImzMeta",
 			warning("problem overwriting file ", sQuote(path))
 	}
 	if ( is.numeric(mz) ) {
-		.writeContinuousIbd(path, mz, intensity, mz.type, intensity.type)
+		.write_continuous_ibd(path, mz, intensity, mz.type, intensity.type)
 	} else {
-		.writeProcessedIbd(path, mz, intensity, mz.type, intensity.type)
+		.write_processed_ibd(path, mz, intensity, mz.type, intensity.type)
 	}
 }
 
-.writeContinuousIbd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_continuous_ibd <- function(path, mz, intensity, mz.type, intensity.type)
 {
 	mz <- as.numeric(mz)
 	intensity <- as.matrix(intensity)
@@ -165,7 +165,7 @@ setMethod("writeImzML", "ImzMeta",
 	list(uuid=uuid, mz=mz, intensity=intensity)
 }
 
-.writeProcessedIbd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_processed_ibd <- function(path, mz, intensity, mz.type, intensity.type)
 {
 	mz <- as.list(mz)
 	intensity <- as.list(intensity)
@@ -196,7 +196,7 @@ setMethod("writeImzML", "ImzMeta",
 	list(uuid=uuid, mz=mz, intensity=intensity)
 }
 
-.getIbdMetadataFromMatter <- function(mz, intensity, algo = "sha1")
+.get_ibd_metadata_from_matter <- function(mz, intensity, algo = "sha1")
 {
 	if ( is(intensity, "matter_mat") ) {
 		n <- ncol(intensity)
@@ -241,9 +241,9 @@ setMethod("writeImzML", "ImzMeta",
 		type=type, uuid=uuid, checksum=checksum)
 }
 
-.setIbdMetadataFromMatter <- function(metadata, mz, intensity, algo = "sha1")
+.set_ibd_metadata_from_matter <- function(metadata, mz, intensity, algo = "sha1")
 {
-	meta <- .getIbdMetadataFromMatter(mz, intensity, algo)
+	meta <- .get_ibd_metadata_from_matter(mz, intensity, algo)
 	type_ids <- c("IMS:1000030", "IMS:1000031")
 	hash_ids <- c("IMS:1000090", "IMS:1000091", "IMS:1000092")
 	if ( any(type_ids %in% names(metadata[["fileDescription"]][["fileContent"]])) )

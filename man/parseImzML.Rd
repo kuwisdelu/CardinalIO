@@ -10,7 +10,7 @@
 \title{Parse an imzML File}
 
 \description{
-    Parse an imzML file for experimental and spectrum-level metadata.
+    Parse an imzML file for mass spectrometry (MS) imaging experiment metadata and spectrum-level metadata.
 }
 
 \usage{
