@@ -8,8 +8,8 @@ Authors@R: person("Kylie Ariel", "Bemis",
 	role = c("aut", "cre"))
 Description: Fast and efficient reading and writing of mass spectrometry imaging data files. Supports imzML and Analyze 7.5 formats. Provides ontologies for mass spectrometry imaging.
 License: Artistic-2.0
-Depends: methods, matter, ontologyIndex
-Imports: S4Vectors, stats, utils, tools
+Depends: R (>= 4.3), matter, ontologyIndex
+Imports: methods, S4Vectors, stats, utils, tools
 Suggests: BiocStyle, testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 biocViews: Software, Infrastructure, DataImport,
