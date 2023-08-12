@@ -12,7 +12,7 @@
 
 \usage{
 \S4method{writeImzML}{ImzML}(object, file, positions = NULL, mz = NULL, intensity = NULL,
-        mz.type = "float32", intensity.type = "float32", asis = FALSE, \dots)
+    mz.type = "float32", intensity.type = "float32", asis = FALSE, \dots)
 
 \S4method{writeImzML}{ImzMeta}(object, file, positions, mz, intensity, \dots)
 }

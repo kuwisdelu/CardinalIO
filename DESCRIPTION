@@ -3,9 +3,10 @@ Type: Package
 Title: Read and write mass spectrometry imaging files
 Version: 0.7.0
 Date: 2023-8-11
-Author: Kylie A. Bemis <k.bemis@northeastern.edu>
-Maintainer: Kylie A. Bemis <k.bemis@northeastern.edu>
-Description: Fast and efficient parsing, reading, and writing of mass spectrometry imaging experiment data files in the open imzML format.
+Authors@R: person("Kylie Ariel", "Bemis",
+	email = "k.bemis@northeastern.edu",
+	role = c("aut", "cre"))
+Description: Fast and efficient reading and writing of mass spectrometry imaging data files. Supports imzML and Analyze 7.5 formats. Provides ontologies for mass spectrometry imaging.
 License: Artistic-2.0
 Depends: methods, matter, ontologyIndex
 Imports: S4Vectors, stats, utils, tools
