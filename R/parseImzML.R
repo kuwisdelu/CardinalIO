@@ -45,29 +45,20 @@ setAs("ImzMeta", "ImzML", function(from) {
 	.convert_ImzMeta_to_ImzML(from)
 })
 
-# show utility
-.shorten_strings <- function(x, n = 12L)
-{
-	ifelse(nchar(x) > n, paste0(substr(x, 1, n), "..."), x)
-}
-
-.show_list_names <- function(x, n = 12L, sep = " ")
-{
-	for ( i in seq_along(x) ) {
-		len <- length(x[[i]])
-		nms <- names(x[[i]])
-		if ( len > n )
-			nms <- paste0(head(nms, n=n), "...")
-		nms <- paste0(nms, collapse=sep)
-		size <- paste0("(", len, ")")
-		cat("$", names(x)[i], size, ": ", nms, "\n", sep="")
-	}
-}
-
-setMethod("show", "ImzML", function(object) {
-	cat(class(object), ": ", metadata(object)[["source"]][1L], "\n\n", sep="")
-	.show_list_names(object, n=7L)
-})
+setMethod("show", "ImzML",
+	function(object) {
+		n <- 6L
+		cat("ImzML: ", metadata(object)[["source"]][1L], "\n\n", sep="")
+		for ( i in seq_along(object) ) {
+			len <- length(object[[i]])
+			nms <- names(object[[i]])
+			if ( len > n )
+				nms <- paste0(head(nms, n=n), "...")
+			nms <- paste0(nms, collapse=" ")
+			size <- paste0("(", len, ")")
+			cat("$", names(object)[i], size, ": ", nms, "\n", sep="")
+		}
+	})
 
 # test if cvParam (does *_NOT_* check ontology validity)
 .is_cvParam <- function(x) {
@@ -90,9 +81,16 @@ setMethod("show", "ImzML", function(object) {
 	a[nm]
 }
 
-# print cvParams and userParams
-.show_params <- function(x, n = 12L, collapse = ", ")
+# show utility
+.shorten_strings <- function(x, n = 12L)
 {
+	ifelse(nchar(x) > n, paste0(substr(x, 1, n), "..."), x)
+}
+
+# print list of cvParams and userParams
+print.imzplist <- function(x, n = 12L, ...)
+{
+	cat(sprintf("Params list of length %d\n", length(x)))
 	a <- .xml_attr(x)
 	if ( length(a) > 0L ) {
 		a <- vapply(a, as.character, character(1L))
@@ -142,14 +140,6 @@ setMethod("show", "ImzML", function(object) {
 		if ( length(x) > n )
 			cat(sprintf("... %d more\n", length(x) - n))
 	}
-}
-
-# print list of cvParams and userParams
-print.imzplist <- function(x, n = 12L, collapse = ", ", ...)
-{
-	cat(sprintf("Params list of length %d\n", length(x)))
-	.show_params(x, n=n, collapse=collapse, ...)
-	invisible(x)
 }
 
 #### Parse an imzML file ####

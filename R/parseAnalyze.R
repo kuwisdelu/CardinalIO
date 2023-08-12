@@ -19,7 +19,7 @@ setMethod("show", "Analyze75",
 		dims <- dim(object$img)
 		dims <- paste0(dims, collapse=" x ")
 		cat("Analyze 7.5: ", metadata(object)[["source"]][2L], "\n\n", sep="")
-		cat("$hdr: ", paste0(names(object$hdr), collapse=", "), "\n", sep="")
+		cat("$hdr: ", paste0(names(object$hdr), collapse=" "), "\n", sep="")
 		type <- as.character(type(object$img))
 		cat("$img: <", dims, "> ", type, " array\n", sep="")
 		if ( "mz" %in% names(object) )

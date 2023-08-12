@@ -1,7 +1,7 @@
 ---
 title: "_CardinalIO_: Parsing and writing imzML files"
 author: "Kylie Ariel Bemis"
-date: "Revised: August 5, 2023"
+date: "Revised: August 12, 2023"
 output:
     BiocStyle::html_document:
     toc: true

@@ -180,24 +180,21 @@ setAs("list", "ImzMeta", function(from) {
 	object
 }
 
-.show_list_values <- function(x, n = 12L, sep=", ")
-{
-	for ( i in seq_along(x) ) {
-		len <- length(x[[i]])
-		vals <- x[[i]]
-		if ( len > n )
-			vals <- paste0(head(vals, n=n), "...")
-		vals <- paste0(vals, collapse=sep)
-		size <- paste0("(", len, ")")
-		cat("$", names(x)[i], size, ": ", vals, "\n", sep="")
-	}
-}
-
-setMethod("show", "ImzMeta", function(object) {
-	description <- "Mass spectrometry imaging experimental metadata"
-	cat(class(object), ": ", description, "\n\n", sep="")
-	.show_list_values(object, n=7L)
-})
+setMethod("show", "ImzMeta",
+	function(object) {
+		n <- 6L
+		description <- "Mass spectrometry imaging experimental metadata"
+		cat("ImzMeta: ", description, "\n\n", sep="")
+		for ( i in seq_along(object) ) {
+			len <- length(object[[i]])
+			vals <- object[[i]]
+			if ( len > n )
+				vals <- paste0(head(vals, n=n), "...")
+			vals <- paste0(vals, collapse=", ")
+			size <- paste0("(", len, ")")
+			cat("$", names(object)[i], size, ": ", vals, "\n", sep="")
+		}
+	})
 
 #### ImzML to ImzMeta conversion ####
 ## ----------------------------------
