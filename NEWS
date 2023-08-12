@@ -1,4 +1,12 @@
 
+CHANGES IN VERSION 0.7.0 [2023-8-11]
+------------------------------------
+
+NEW FEATURES
+
+    o Added 'parseAnalyze()' and 'writeAnalyze()'
+    o Support for Analyze 7.5 files
+
 CHANGES IN VERSION 0.6.0 [2023-8-11]
 ------------------------------------
 
