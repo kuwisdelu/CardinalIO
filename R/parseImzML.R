@@ -65,7 +65,7 @@ setAs("ImzMeta", "ImzML", function(from) {
 }
 
 setMethod("show", "ImzML", function(object) {
-	cat(class(object), ": ", metadata(object)[["source"]], "\n\n", sep="")
+	cat(class(object), ": ", metadata(object)[["source"]][1L], "\n\n", sep="")
 	.show_list_names(object, n=7L)
 })
 
@@ -166,8 +166,8 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 	parse <- .new_ImzML(parse, validate=FALSE)
 	if ( ibd || check )
 	{
-		binpath <- paste0(file_path_sans_ext(path), ".ibd")
-		binpath <- normalizePath(binpath, mustWork=TRUE)
+		path_ibd <- paste0(file_path_sans_ext(path), ".ibd")
+		path_ibd <- normalizePath(path_ibd, mustWork=TRUE)
 		parse[["ibd"]] <- list()
 		if ( check ) {
 			fileContent <- parse[["fileDescription"]][["fileContent"]]
@@ -179,7 +179,7 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 					"IMS:1000091"="sha1",
 					"IMS:1000092"="sha256",
 					"sha1")
-				hash <- checksum(binpath, algo=algo)
+				hash <- checksum(path_ibd, algo=algo)
 				if ( !isTRUE(hash == chk["value"]) )
 					warning(chk["name"], " tag from imzML file [", chk["value"], "] ",
 						"does not match ", algo, " checksum from ibd file [", hash, "]")
@@ -188,7 +188,7 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 				warning("couldn't determine checksum from imzML file")
 			}
 			fid <- fileContent[["IMS:1000080"]]
-			uuid <- as.raw(matter_vec(path=binpath, type="raw", length=16L))
+			uuid <- as.raw(matter_vec(path=path_ibd, type="raw", length=16L))
 			fid_clean <- gsub("[^[:alnum:]]", "", fid["value"])
 			if ( !isTRUE(raw2hex(uuid) == fid_clean) )
 				warning("'uuid' tag from imzML file [", fid_clean, "] ",
@@ -198,16 +198,17 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 		if ( ibd ) {
 			mzArrays <- parse[["run"]][["spectrumList"]][["mzArrays"]]
 			intensityArrays <- parse[["run"]][["spectrumList"]][["intensityArrays"]]
-			mz <- matter_list(path=binpath, type=mzArrays[["binary data type"]],
+			mz <- matter_list(path=path_ibd, type=mzArrays[["binary data type"]],
 				offset=as.numeric(mzArrays[["external offset"]]),
 				extent=as.numeric(mzArrays[["external array length"]]),
 				names=row.names(mzArrays))
-			intensity <- matter_list(path=binpath, type=intensityArrays[["binary data type"]],
+			intensity <- matter_list(path=path_ibd, type=intensityArrays[["binary data type"]],
 				offset=as.numeric(intensityArrays[["external offset"]]),
 				extent=as.numeric(intensityArrays[["external array length"]]),
 				names=row.names(intensityArrays))
 			parse[["ibd"]][["mz"]] <- mz
 			parse[["ibd"]][["intensity"]] <- intensity
+			path <- c(path, path_ibd)
 		}
 	}
 	metadata(parse)[["source"]] <- path

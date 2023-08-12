@@ -1,5 +1,9 @@
 \name{parseAnalyze}
 
+\alias{class:Analyze75}
+\alias{Analyze75}
+\alias{Analyze75-class}
+
 \alias{parseAnalyze}
 \alias{writeAnalyze}
 
@@ -32,7 +36,7 @@ writeAnalyze(object, file, type = "float32", mz, \dots)
 }
 
 \value{
-	An object of class \code{analyze75}, which is a list with components named \code{hdr}, \code{img}, and (if appropriate) \code{mz}.
+	An object of class \code{Analyze75}, which is a list with components named \code{hdr}, \code{img}, and (if appropriate) \code{mz}.
 }
 
 \author{Kylie A. Bemis}
@@ -55,3 +59,4 @@ writeAnalyze(intensity, path, type="float32", mz=mz)
 
 \keyword{IO}
 \keyword{file}
+

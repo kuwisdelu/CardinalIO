@@ -27,6 +27,7 @@ export(
 S3method("print", "imzplist")
 
 exportClasses(
+	"Analyze75",
 	"ImzMeta",
 	"ImzML")
 
@@ -40,7 +41,5 @@ exportMethods("writeImzML")
 export(
 	"parseAnalyze",
 	"writeAnalyze")
-
-S3method("print", "analyze75")
 
 useDynLib("CardinalIO", .registration=TRUE, .fixes="C_")

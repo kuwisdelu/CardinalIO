@@ -1,4 +1,37 @@
 
+#### Analyze75 class ####
+## -----------------------
+
+setClass("Analyze75", contains = "SimpleList")
+
+# no public constructor (get from parseAnalyze)
+
+# construct new Analyze75 from arguments
+.new_Analyze75 <- function(...)
+{
+	object <- SimpleList(...)
+	as(object, "Analyze75")
+}
+
+setMethod("show", "Analyze75",
+	function(object) {
+		n <- 6L
+		dims <- dim(object$img)
+		dims <- paste0(dims, collapse=" x ")
+		cat("Analyze 7.5: ", metadata(object)[["source"]][2L], "\n\n", sep="")
+		cat("$hdr: ", paste0(names(object$hdr), collapse=", "), "\n", sep="")
+		type <- as.character(type(object$img))
+		cat("$img: <", dims, "> ", type, " array\n", sep="")
+		if ( "mz" %in% names(object) )
+		{
+			vals <- format(head(object$mz, n=n))
+			vals <- paste0(vals, collapse=", ")
+			if ( length(object$mz) > n )
+				vals <- paste(vals, "...")
+			cat("$mz: ", vals, "\n", sep="")
+		}
+	})
+
 #### Parse Analyze 7.5 files ####
 ## -------------------------------
 
@@ -10,19 +43,21 @@ parseAnalyze <- function(file, ...)
 	path_t2m <- normalizePath(paste0(path, ".t2m"), mustWork=FALSE)
 	if ( file.size(path_hdr) != 348L )
 		warning("Analyze 7.5 header is the wrong size: ", sQuote(path_hdr))
-	hdr <- .get_analyze75_header(path_hdr)
-	img <- .get_analyze75_image(path_img, hdr)
+	hdr <- .get_Analyze75_header(path_hdr)
+	img <- .get_Analyze75_image(path_img, hdr)
 	if ( file.exists(path_t2m) ) {
 		len <- dim(img)[1L]
 		t2m <- matter_vec(path=path_t2m, type="float32", length=len)
-		source <- c(path_hdr, path_img, path_t2m)
-		structure(list(hdr=hdr, img=img, mz=t2m),
-			source=source, class="analyze75")
+		path <- c(path_hdr, path_img, path_t2m)
+		parse <- .new_Analyze75(hdr=hdr, img=img, mz=t2m)
 	} else {
-		source <- c(path_hdr, path_img)
-		structure(list(hdr=hdr, img=img),
-			source=source, class="analyze75")
+		path <- c(path_hdr, path_img)
+		parse <- .new_Analyze75(hdr=hdr, img=img)
 	}
+	metadata(parse)[["source"]] <- path
+	metadata(parse)[["location"]] <- dirname(path)
+	metadata(parse)[["name"]] <- basename(path)
+	parse
 }
 
 writeAnalyze <- function(object, file, type = "float32", mz, ...)
@@ -39,13 +74,13 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 		if ( !file.create(path_hdr) )
 			warning("problem overwriting file ", sQuote(path_hdr))
 	}
-	hdr <- .set_analyze75_header(path_hdr, x, type)
+	hdr <- .set_Analyze75_header(path_hdr, x, type)
 	if ( file.exists(path_img) ) {
 		warning("file ", sQuote(path_img), " already exists and will be overwritten")
 		if ( !file.create(path_img) )
 			warning("problem overwriting file ", sQuote(path_img))
 	}
-	img <- .set_analyze75_image(path_img, x, type)
+	img <- .set_Analyze75_image(path_img, x, type)
 	if ( !missing(mz) ) {
 		if ( file.exists(path_t2m) ) {
 			warning("file ", sQuote(path_t2m), " already exists and will be overwritten")
@@ -60,7 +95,7 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 	structure(TRUE, outpath=source)
 }
 
-.get_analyze75_header <- function(path, readonly = TRUE)
+.get_Analyze75_header <- function(path, readonly = TRUE)
 {
 	header_key <- struct(
 		sizeof_hdr=c("int32"=1),
@@ -120,7 +155,7 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 		data_history=data_history)
 }
 
-.set_analyze75_header <- function(path, x, type)
+.set_Analyze75_header <- function(path, x, type)
 {
 	dim <- dim(x)
 	ndims <- length(dim)
@@ -130,7 +165,7 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 		dim <- c(dim, 1L)
 		ndims <- 4L
 	}
-	hdr <- .get_analyze75_header(path, readonly=FALSE)
+	hdr <- .get_Analyze75_header(path, readonly=FALSE)
 	hdr$header_key[] <- rep(list(0), length(hdr$header_key))
 	hdr$image_dimensions[] <- rep(list(0), length(hdr$image_dimensions))
 	hdr$data_history[] <- rep(list(0), length(hdr$data_history))
@@ -159,7 +194,7 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 	hdr
 }
 
-.get_analyze75_image <- function(path, hdr, readonly = TRUE)
+.get_Analyze75_image <- function(path, hdr, readonly = TRUE)
 {
 	dims_arr <- hdr[["image_dimensions"]][["dim"]]
 	ndims <- dims_arr[1L]
@@ -174,27 +209,7 @@ writeAnalyze <- function(object, file, type = "float32", mz, ...)
 	matter_arr(path=path, type=type, dim=dim, readonly=readonly)
 }
 
-.set_analyze75_image <- function(path, x, type)
+.set_Analyze75_image <- function(path, x, type)
 {
 	matter_arr(x, path=path, type=type, readonly=FALSE)
 }
-
-print.analyze75 <- function(x, n = 6L, collapse = ", ", ...)
-{
-	dims <- dim(x$img)
-	dims <- paste0(dims, collapse=" x ")
-	cat("Analyze 7.5: ", attr(x, "source")[2L], "\n\n", sep="")
-	cat("$hdr: ", paste0(names(x$hdr), collapse=", "), "\n", sep="")
-	type <- as.character(type(x$img))
-	cat("$img: <", dims, "> ", type, " array\n", sep="")
-	if ( "mz" %in% names(x) )
-	{
-		vals <- format(head(x$mz, n=n))
-		vals <- paste0(vals, collapse=", ")
-		if ( length(x$mz) > n )
-			vals <- paste(vals, "...")
-		cat("$mz: ", vals, "\n", sep="")
-	}
-	invisible(x)
-}
-
