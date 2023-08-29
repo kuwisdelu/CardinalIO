@@ -1,4 +1,12 @@
 
+CHANGES IN VERSION 0.99.1 [2023-8-29]
+------------------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Added package-level 'CardinalIO' help page
+
+
 CHANGES IN VERSION 0.99.0 [2023-8-12]
 ------------------------------------
 
