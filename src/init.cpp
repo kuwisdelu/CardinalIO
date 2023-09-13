@@ -7,7 +7,7 @@
 extern "C" {
 
 static const R_CallMethodDef callMethods[] = {
-	CALLDEF(parseImzML, 2),
+	CALLDEF(parseImzML, 3),
 	CALLDEF(writeImzML, 5),
 	{NULL, NULL, 0}
 };

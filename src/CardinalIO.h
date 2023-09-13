@@ -6,7 +6,7 @@
 
 extern "C" {
 
-SEXP parseImzML(SEXP file, SEXP extra);
+SEXP parseImzML(SEXP file, SEXP extra, SEXP extraArrays);
 
 SEXP writeImzML(SEXP xml, SEXP positions,
 	SEXP mzArrays, SEXP intensityArrays,

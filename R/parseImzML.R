@@ -145,21 +145,35 @@ print.imzplist <- function(x, n = 12L, ...)
 #### Parse an imzML file ####
 ## --------------------------
 
-parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
+parseImzML <- function(file, ibd = FALSE, extra = NULL,
+	extraArrays = NULL, check = ibd, ...)
 {
 	path <- normalizePath(file, mustWork=TRUE)
 	if ( file_ext(path) != "imzML" )
 		warning("file ", sQuote(path), " does not have '.imzML' extension")
 	if ( !is.null(extra) && !is.character(extra) )
 		stop("'extra' must be a character vector or NULL")
-	parse <- .Call(C_parseImzML, path, extra)
+	parse <- .Call(C_parseImzML, path, extra, extraArrays)
 	parse <- .new_ImzML(parse, validate=FALSE)
+	if ( !is.null(names(extra)) )
+	{
+		ex <- parse[["run"]][["spectrumList"]][["extra"]]
+		names(ex) <- names(extra)
+		parse[["run"]][["spectrumList"]][["extra"]] <- ex
+	}
+	if ( !is.null(names(extraArrays)) )
+	{
+		ex <- parse[["run"]][["spectrumList"]][["extraArrays"]]
+		names(ex) <- names(extraArrays)
+		parse[["run"]][["spectrumList"]][["extraArrays"]] <- ex
+	}
 	if ( ibd || check )
 	{
 		path_ibd <- paste0(file_path_sans_ext(path), ".ibd")
 		path_ibd <- normalizePath(path_ibd, mustWork=TRUE)
 		parse[["ibd"]] <- list()
-		if ( check ) {
+		if ( check )
+		{
 			fileContent <- parse[["fileDescription"]][["fileContent"]]
 			chk <- find_descendants_in(fileContent, "IMS:1000009", "ims")
 			if ( length(chk) == 1L ) {
@@ -185,7 +199,8 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 					"does not match 'uuid' bytes from ibd file [", raw2hex(uuid), "]")
 			parse[["ibd"]][["uuid"]] <- uuid
 		}
-		if ( ibd ) {
+		if ( ibd )
+		{
 			mzArrays <- parse[["run"]][["spectrumList"]][["mzArrays"]]
 			intensityArrays <- parse[["run"]][["spectrumList"]][["intensityArrays"]]
 			mz <- matter_list(path=path_ibd, type=mzArrays[["binary data type"]],
@@ -198,6 +213,19 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL, check = ibd, ...)
 				names=row.names(intensityArrays))
 			parse[["ibd"]][["mz"]] <- mz
 			parse[["ibd"]][["intensity"]] <- intensity
+			extraArrays <- parse[["run"]][["spectrumList"]][["extraArrays"]]
+			if ( !is.null(extraArrays) )
+			{
+				extra <- lapply(extraArrays,
+					function(ex)
+					{
+						matter_list(path=path_ibd, type=ex[["binary data type"]],
+							offset=as.numeric(ex[["external offset"]]),
+							extent=as.numeric(ex[["external array length"]]),
+							names=row.names(ex))
+					})
+				parse[["ibd"]][["extra"]] <- extra
+			}
 			path <- c(path, path_ibd)
 		}
 	}

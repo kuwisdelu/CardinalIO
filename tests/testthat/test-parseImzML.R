@@ -122,8 +122,10 @@ test_that("parseImzML - ibd/extra", {
 
 	path <- exampleImzMLFile("continuous")
 	path2 <- exampleImzMLFile("processed")
-	p <- parseImzML(path, ibd=TRUE, extra="total ion current")
-	p2 <- parseImzML(path2, ibd=TRUE, extra="total ion current")
+	p <- parseImzML(path, ibd=TRUE,
+		extra=c("total ion current", "MS:1000285"))
+	p2 <- parseImzML(path2, ibd=TRUE,
+		extra=c("total ion current", "MS:1000285"))
 	
 	m <- as.list(p$ibd$mz)
 	m2 <- as.list(p2$ibd$mz)
@@ -139,6 +141,28 @@ test_that("parseImzML - ibd/extra", {
 
 	expect_equal(tic, sl$extra[["total ion current"]])
 	expect_equal(tic, sl2$extra[["total ion current"]])
+	
+	expect_equal(tic, sl$extra[["MS:1000285"]])
+	expect_equal(tic, sl2$extra[["MS:1000285"]])
+
+	p3 <- parseImzML(path2, ibd=TRUE,
+		extraArrays=c("m/z array", "MS:1000514"))
+
+	sl3 <- p3$run$spectrumList
+
+	expect_equal(sl3$mzArrays, sl3$extraArrays[[1L]])
+	expect_equal(sl3$mzArrays, sl3$extraArrays[[2L]])
+	expect_equal(p2$ibd$mz, p3$ibd$extra[[1L]])
+	expect_equal(p2$ibd$mz, p3$ibd$extra[[2L]])
+
+	p4 <- parseImzML(path2, ibd=TRUE,
+		extra=c(TIC="MS:1000285"),
+		extraArrays=c(mz="m/z array"))
+
+	sl4 <- p4$run$spectrumList
+
+	expect_equal(tic, sl4$extra[["TIC"]])
+	expect_equal(p4$ibd$mz, p4$ibd$extra[["mz"]])
 
 })
 

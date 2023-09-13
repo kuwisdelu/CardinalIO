@@ -13,7 +13,8 @@
 }
 
 \usage{
-parseImzML(file, ibd = FALSE, extra = NULL, check = ibd, \dots)
+parseImzML(file, ibd = FALSE, extra = NULL,
+    extraArrays = NULL, check = ibd, \dots)
 }
 
 \arguments{
@@ -21,7 +22,9 @@ parseImzML(file, ibd = FALSE, extra = NULL, check = ibd, \dots)
 
     \item{ibd}{Should the binary data file be attached?}
 
-    \item{extra}{Additional cvParam or userParam tags to parse from spectrum and/or scan tags by their \emph{name} attribute.}
+    \item{extra}{Additional cvParam or userParam tags to parse from spectrum and/or scan tags by their \emph{accession} or \emph{name} attributes.}
+
+    \item{extraArrays}{Additional binary data arrays to parse based on identifying \emph{accession} or \emph{name} cvParam tags.}
 
     \item{check}{Should the UUID and checksum of the binary data file be checked against the corresponding imzML tags?}
 
@@ -50,7 +53,7 @@ parseImzML(file, ibd = FALSE, extra = NULL, check = ibd, \dots)
 path <- exampleImzMLFile()
 
 # parse the file
-p <- parseImzML(path, ibd=TRUE, extra="total ion current")
+p <- parseImzML(path, ibd=TRUE, extra=c(TIC="MS:1000285"))
 print(p)
 
 # get the spectra positions

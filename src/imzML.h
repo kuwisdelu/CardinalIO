@@ -253,7 +253,10 @@ class imzML {
 		{
 			pugi::xml_node node = spectrum.child("binaryDataArrayList").first_child();
 			while ( node ) {
-				pugi::xml_node ibd = find_param(node, "cvParam", "accession", id);
+				pugi::xml_node ibd;
+				ibd = find_param(node, "cvParam", "accession", id);
+				if ( !ibd )
+					ibd = find_param(node, "cvParam", "name", id);
 				if ( ibd )
 					return node;
 				node = node.next_sibling();
@@ -648,6 +651,48 @@ class imzML {
 			return positions;
 		}
 
+		// get additional spectrum tags as R data frame
+		SEXP get_spectrum_extra(SEXP ids)
+		{
+			if ( Rf_isNull(ids) )
+				return R_NilValue;
+			int nr = num_spectra();
+			int nc = LENGTH(ids);
+			SEXP extra;
+			PROTECT(extra = Rf_allocVector(VECSXP, nc));
+			for ( int j = 0; j < nc; j++ )
+				SET_VECTOR_ELT(extra, j, Rf_allocVector(STRSXP, nr));
+			pugi::xml_node spectrum = first_spectrum();
+			pugi::xml_node scan, tag;
+			int i = 0;
+			while ( spectrum && i < nr ) {
+				// safe check for interrupt (allow xml destructor to run)
+				if ( pendingInterrupt() ) {
+					Rf_warning("stopping early; parse may be incomplete");
+					break;
+				}
+				scan = spectrum.child("scanList").child("scan");
+				for ( int j = 0; j < nc; j++ )
+				{
+					// is this too clever?
+					if ( (tag = find_param(spectrum, "accession", CHAR(STRING_ELT(ids, j)))) ) {}
+					else if ( (tag = find_param(spectrum, "name", CHAR(STRING_ELT(ids, j)))) ) {}
+					else if ( (tag = find_param(scan, "accession", CHAR(STRING_ELT(ids, j)))) ) {}
+					else if ( (tag = find_param(scan, "name", CHAR(STRING_ELT(ids, j)))) ) {}
+					else {}
+					SEXP x = VECTOR_ELT(extra, j);
+					SET_STRING_ELT(x, i, mkCharOrNA(tag.attribute("value").value()));
+				}
+				spectrum = spectrum.next_sibling();
+				i++;
+			}
+			Rf_setAttrib(extra, R_NamesSymbol, ids);
+			Rf_setAttrib(extra, R_RowNamesSymbol, get_spectrum_ids());
+			Rf_setAttrib(extra, R_ClassSymbol, Rf_mkString("data.frame"));
+			UNPROTECT(1);
+			return extra;
+		}
+
 		// get spectrum binary data arrays as R data frame
 		SEXP get_spectrum_arrays(const char * id)
 		{
@@ -715,63 +760,49 @@ class imzML {
 			return get_spectrum_arrays(MS_INTENSITY_ARRAY_ID);
 		}
 
-		// get additional spectrum tags as R data frame
-		SEXP get_spectrum_extra(SEXP names)
+		// get additional spectrum binary data arrays
+		SEXP get_spectrum_extraArrays(SEXP ids)
 		{
-			if ( Rf_isNull(names) )
-				return R_NilValue;
-			int nr = num_spectra();
-			int nc = LENGTH(names);
-			SEXP extra;
-			PROTECT(extra = Rf_allocVector(VECSXP, nc));
-			for ( int j = 0; j < nc; j++ )
-				SET_VECTOR_ELT(extra, j, Rf_allocVector(STRSXP, nr));
-			pugi::xml_node spectrum = first_spectrum();
-			pugi::xml_node scan, tag;
-			int i = 0;
-			while ( spectrum && i < nr ) {
-				// safe check for interrupt (allow xml destructor to run)
-				if ( pendingInterrupt() ) {
-					Rf_warning("stopping early; parse may be incomplete");
-					break;
-				}
-				scan = spectrum.child("scanList").child("scan");
-				for ( int j = 0; j < nc; j++ )
-				{
-					tag = find_param(spectrum, "name", CHAR(STRING_ELT(names, j)));
-					if ( !tag )
-						tag = find_param(scan, "name", CHAR(STRING_ELT(names, j)));
-					SEXP x = VECTOR_ELT(extra, j);
-					SET_STRING_ELT(x, i, mkCharOrNA(tag.attribute("value").value()));
-				}
-				spectrum = spectrum.next_sibling();
-				i++;
+			int n = LENGTH(ids);
+			SEXP extraArrays;
+			PROTECT(extraArrays = Rf_allocVector(VECSXP, n));
+			for ( int i = 0; i < n; i++ )
+			{
+				const char * id = CHAR(STRING_ELT(ids, i));
+				SET_VECTOR_ELT(extraArrays, i, get_spectrum_arrays(id));
 			}
-			Rf_setAttrib(extra, R_NamesSymbol, names);
-			Rf_setAttrib(extra, R_RowNamesSymbol, get_spectrum_ids());
-			Rf_setAttrib(extra, R_ClassSymbol, Rf_mkString("data.frame"));
+			Rf_setAttrib(extraArrays, R_NamesSymbol, ids);
 			UNPROTECT(1);
-			return extra;
+			return extraArrays;
 		}
 
-		SEXP get_spectrumList(SEXP extra)
+		SEXP get_spectrumList(SEXP extra, SEXP extraArrays)
 		{
 			SEXP tags, tagsNames;
-			int n = 3; // positions, mzArrays, intensityArrays
+			int i = 0, j = 0, n = 3; // positions, mzArrays, intensityArrays
 			if ( !Rf_isNull(extra) )
+				n++;
+			if ( !Rf_isNull(extraArrays) )
 				n++;
 			PROTECT(tags = Rf_allocVector(VECSXP, n));
 			PROTECT(tagsNames = Rf_allocVector(STRSXP, n));
-			SET_VECTOR_ELT(tags, 0, get_spectrum_positions());
-			SET_VECTOR_ELT(tags, 1, get_spectrum_mzArrays());
-			SET_VECTOR_ELT(tags, 2, get_spectrum_intensityArrays());
-			SET_STRING_ELT(tagsNames, 0, Rf_mkChar("positions"));
-			SET_STRING_ELT(tagsNames, 1, Rf_mkChar("mzArrays"));
-			SET_STRING_ELT(tagsNames, 2, Rf_mkChar("intensityArrays"));
-			if ( !Rf_isNull(extra) )
+			// get positions and extra tags
+			SET_VECTOR_ELT(tags, i++, get_spectrum_positions());
+			SET_STRING_ELT(tagsNames, j++, Rf_mkChar("positions"));
+			if ( !Rf_isNull(extra) && LENGTH(extra) > 0 )
 			{
-				SET_VECTOR_ELT(tags, 3, get_spectrum_extra(extra));
-				SET_STRING_ELT(tagsNames, 3, Rf_mkChar("extra"));
+				SET_VECTOR_ELT(tags, i++, get_spectrum_extra(extra));
+				SET_STRING_ELT(tagsNames, j++, Rf_mkChar("extra"));
+			}
+			// get binary data arrays
+			SET_VECTOR_ELT(tags, i++, get_spectrum_mzArrays());
+			SET_STRING_ELT(tagsNames, j++, Rf_mkChar("mzArrays"));
+			SET_VECTOR_ELT(tags, i++, get_spectrum_intensityArrays());
+			SET_STRING_ELT(tagsNames, j++, Rf_mkChar("intensityArrays"));
+			if ( !Rf_isNull(extraArrays) && LENGTH(extraArrays) > 0 )
+			{
+				SET_VECTOR_ELT(tags, i++, get_spectrum_extraArrays(extraArrays));
+				SET_STRING_ELT(tagsNames, j++, Rf_mkChar("extraArrays"));
 			}
 			Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 			UNPROTECT(2);
@@ -958,12 +989,12 @@ class imzML {
 		//// Get run metadata
 		//--------------------
 
-		SEXP get_run(SEXP extra)
+		SEXP get_run(SEXP extra, SEXP extraArrays)
 		{
 			SEXP tags, tagsNames;
 			PROTECT(tags = Rf_allocVector(VECSXP, 1));
 			PROTECT(tagsNames = Rf_allocVector(STRSXP, 1));
-			SET_VECTOR_ELT(tags, 0, get_spectrumList(extra));
+			SET_VECTOR_ELT(tags, 0, get_spectrumList(extra, extraArrays));
 			SET_STRING_ELT(tagsNames, 0, Rf_mkChar("spectrumList"));
 			Rf_setAttrib(tags, R_NamesSymbol, tagsNames);
 			UNPROTECT(2);
