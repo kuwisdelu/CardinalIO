@@ -6,6 +6,10 @@ NEW FEATURES
 
     o Added support for additional binary data arrays
 
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Casefold checksums and UUIDs before comparison
+
 CHANGES IN VERSION 0.99.1 [2023-8-29]
 ------------------------------------
 

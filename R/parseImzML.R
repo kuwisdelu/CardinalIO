@@ -183,8 +183,8 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 					"IMS:1000091"="sha1",
 					"IMS:1000092"="sha256",
 					"sha1")
-				hash <- checksum(path_ibd, algo=algo)
-				if ( !isTRUE(hash == chk["value"]) )
+				hash <- tolower(checksum(path_ibd, algo=algo))
+				if ( !isTRUE(hash == tolower(chk["value"])) )
 					warning(chk["name"], " tag from imzML file [", chk["value"], "] ",
 						"does not match ", algo, " checksum from ibd file [", hash, "]")
 				attr(parse[["ibd"]], "checksum") <- hash
@@ -194,7 +194,7 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 			fid <- fileContent[["IMS:1000080"]]
 			uuid <- as.raw(matter_vec(path=path_ibd, type="raw", length=16L))
 			fid_clean <- gsub("[^[:alnum:]]", "", fid["value"])
-			if ( !isTRUE(raw2hex(uuid) == fid_clean) )
+			if ( !isTRUE(raw2hex(uuid) == tolower(fid_clean)) )
 				warning("'uuid' tag from imzML file [", fid_clean, "] ",
 					"does not match 'uuid' bytes from ibd file [", raw2hex(uuid), "]")
 			parse[["ibd"]][["uuid"]] <- uuid
