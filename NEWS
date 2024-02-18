@@ -1,4 +1,11 @@
 
+CHANGES IN VERSION 1.1.1 [2024-2-18]
+------------------------------------
+
+BUG FIXES
+
+    o Fix error when setting 'ImzMeta' elements to NULL
+
 CHANGES IN VERSION 0.99.2 [2023-9-13]
 ------------------------------------
 

@@ -124,13 +124,16 @@ setReplaceMethod("[[", "ImzMeta",
 			} else {
 				stop("ImzMeta tag not recognized: ", sQuote(i))
 			}
-			if ( i %in% .get_multi_meta_tagnames() ) {
-				value <- unlist(lapply(value, find_term, obo=obo, value="name"))
-			} else {
-				value <- find_term(value, obo=obo, value="name")
+			if ( !is.null(value) ) {
+				if ( i %in% .get_multi_meta_tagnames() ) {
+					value <- unlist(lapply(value, find_term, obo=obo, value="name"))
+				} else {
+					value <- find_term(value, obo=obo, value="name")
+				}
 			}
 		} else if ( i %in% names(.get_all_meta_tags()) ) {
-			value <- as.character(value)
+			if ( !is.null(value) )
+				value <- as.character(value)
 		} else {
 			tagnames <- names(.get_all_meta_tags())
 			possible <- grep(i, tagnames, ignore.case=TRUE, value=TRUE)
