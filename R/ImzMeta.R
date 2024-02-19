@@ -144,7 +144,11 @@ setReplaceMethod("[[", "ImzMeta",
 			stop("ImzMeta tag not recognized: ", sQuote(i), "; ",
 				" did you mean: ", possible, "?")
 		}
-		x <- callNextMethod(x, i, ..., value=value)
+		if ( is.null(value) ) {
+			x[i] <- list(NULL)
+		} else {
+			x <- callNextMethod(x, i, ..., value=value)
+		}
 		if ( validObject(x) )
 			x
 	})
