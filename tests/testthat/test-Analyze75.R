@@ -14,7 +14,7 @@ test_that("Analyze 7.5 - write/parse", {
 	dim(intensity) <- c(nmz, nx, ny)
 	path <- tempfile(fileext=".hdr")
 
-	success <- writeAnalyze(intensity, path, type="float32", domain=mz)
+	success <- writeAnalyze(intensity, path, domain=mz, type="float32")
 
 	expect_true(success)
 	expect_equal(file.size(path), 348L)

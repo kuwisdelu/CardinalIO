@@ -5,10 +5,8 @@
 \alias{Analyze75-class}
 
 \alias{parseAnalyze}
-\alias{writeAnalyze}
-\alias{writeAnalyze,array-method}
 
-\title{Read or Write Analyze 7.5 Files}
+\title{Parse an Analyze 7.5 File}
 
 \description{
     Analyze 7.5 is a format originally designed for magnetic resonance imaging (MRI), but is also used for mass spectrometry (MS) imaging.
@@ -16,20 +14,12 @@
 
 \usage{
 parseAnalyze(file, \dots)
-
-\S4method{writeAnalyze}{array}(object, file, type = "float32", domain, \dots)
 }
 
 \arguments{
     \item{file}{The file path to either of the ".hdr" or ".img" files.}
 
     \item{\dots}{Not currently used.}
-
-    \item{object}{Array-like data of at least 3 dimensions.}
-
-    \item{type}{The data type using for writing the ".img" file. Allowed values are "int16", "int32", "float32", and "float64".}
-
-    \item{domain}{An optional numeric vector of domain values (e.g., m/z-values).}
 }
 
 \details{
@@ -55,9 +45,9 @@ dim(intensity) <- c(nmz, nx, ny)
 path <- tempfile(fileext=".hdr")
 
 # write it in Analyze 7.5 format
-writeAnalyze(intensity, path, type="float32", domain=mz)
+writeAnalyze(intensity, path, domain=mz, type="float32")
 
-# parse it
+# parse it back in
 parseAnalyze(path)
 }
 

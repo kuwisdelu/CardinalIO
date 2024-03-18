@@ -5,19 +5,45 @@
 setGeneric("writeAnalyze", function(object, ...) standardGeneric("writeAnalyze"))
 
 setMethod("writeAnalyze", "array", 
-	function(object, file, type = "float32", domain, ...)
+	function(object, file, positions = NULL, domain = NULL,
+		type = "float32", ...)
 	{
-		.write_Analyze75(object, file=file, type=type, domain=domain, ...)
+		.write_Analyze75(object, file=file,
+			positions=positions, domain=domain, type=type)
 	})
 
-.write_Analyze75 <- function(x, file, type = "float32", domain, ...)
+setMethod("writeAnalyze", "matter_arr", 
+	function(object, file, positions = NULL, domain = NULL,
+		type = "float32", ...)
+	{
+		.write_Analyze75(object, file=file,
+			positions=positions, domain=domain, type=type)
+	})
+
+setMethod("writeAnalyze", "sparse_arr", 
+	function(object, file, positions = NULL, domain = NULL,
+		type = "float32", ...)
+	{
+		.write_Analyze75(object, file=file,
+			positions=positions, domain=domain, type=type)
+	})
+
+.write_Analyze75 <- function(x, file, positions, domain, type)
 {
-	if ( "mz" %in% ...names() ) {
-		.Deprecated(old="mz", new="domain")
-		domain <- list(...)$mz
+	if ( is.null(positions) ) {
+		if ( length(dim(x)) < 3L )
+			stop("'x' must be array-like with at least 3 dimensions")
+		positions <- expand.grid(lapply(dim(x)[-1L], seq_len))
+		dim(x) <- c(dim(x)[1L], prod(dim(x)[-1L]))
+	} else {
+		if ( length(dim(x)) != 2L )
+			stop("'x' must be matrix-like when 'positions' is specified")
+		pos_ok <- vapply(positions,
+			function(pos) all(pos == as.integer(pos)), logical(1L))
+		if ( !all(pos_ok) )
+			stop("'positions' must be gridded integer coordinates")
 	}
-	if ( length(dim(x)) < 3L )
-		stop("'x' must be array-like with at least 3 dimensions")
+	dim <- c(dim(x)[1L], vapply(positions, max, numeric(1L)))
 	path <- file_path_sans_ext(file)
 	path_hdr <- normalizePath(paste0(path, ".hdr"), mustWork=FALSE)
 	path_img <- normalizePath(paste0(path, ".img"), mustWork=FALSE)
@@ -27,13 +53,13 @@ setMethod("writeAnalyze", "array",
 		if ( !file.create(path_hdr) )
 			warning("problem overwriting file ", sQuote(path_hdr))
 	}
-	hdr <- .set_Analyze75_header(path_hdr, x, type)
+	hdr <- .set_Analyze75_header(path_hdr, dim, type)
 	if ( file.exists(path_img) ) {
 		warning("file ", sQuote(path_img), " already exists and will be overwritten")
 		if ( !file.create(path_img) )
 			warning("problem overwriting file ", sQuote(path_img))
 	}
-	img <- .set_Analyze75_image(path_img, x, type)
+	img <- .set_Analyze75_image(path_img, x, positions, type)
 	if ( !missing(domain) && !is.null(domain) ) {
 		domain <- as.double(domain)
 		if ( file.exists(path_t2m) ) {
@@ -49,9 +75,8 @@ setMethod("writeAnalyze", "array",
 	structure(TRUE, outpath=outpath)
 }
 
-.set_Analyze75_header <- function(path, x, type)
+.set_Analyze75_header <- function(path, dim, type)
 {
-	dim <- dim(x)
 	ndims <- length(dim)
 	if ( ndims < 3L )
 		stop("need at least 3 dimensions")
@@ -88,7 +113,15 @@ setMethod("writeAnalyze", "array",
 	hdr
 }
 
-.set_Analyze75_image <- function(path, x, type)
+.set_Analyze75_image <- function(path, x, positions, type)
 {
-	matter_arr(x, path=path, type=type, readonly=FALSE)
+	if ( ncol(x) != nrow(positions) )
+		stop("extent of array does not match number of positions")
+	dim <- vapply(positions, max, numeric(1L))
+	img <- matter_mat(0, nrow=nrow(x), ncol=prod(dim),
+		path=path, type=type, readonly=FALSE)
+	index <- linear_ind(as.matrix(positions), dim)
+	for ( i in seq_along(index) )
+		img[,index[i]] <- x[,i]
+	img
 }
