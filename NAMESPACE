@@ -33,13 +33,12 @@ exportClasses(
 
 export(
 	"ImzMeta",
+	"parseAnalyze",
 	"parseImzML",
 	"exampleImzMLFile")
 
-exportMethods("writeImzML")
-
-export(
-	"parseAnalyze",
-	"writeAnalyze")
+exportMethods(
+	"writeAnalyze",
+	"writeImzML")
 
 useDynLib("CardinalIO", .registration=TRUE, .fixes="C_")

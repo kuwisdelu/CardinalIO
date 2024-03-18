@@ -1,4 +1,22 @@
 
+CHANGES IN VERSION 1.1.3 [2024-3-18]
+------------------------------------
+
+NEW FEATURES
+
+    o Made 'writeAnalyze()' an S4 generic
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Change 'writeAnalyze()' parameter 'mz' to 'domain'
+
+CHANGES IN VERSION 1.1.2 [2024-3-13]
+------------------------------------
+
+BUG FIXES
+
+    o Remove case sensitivity when checking file extensions
+
 CHANGES IN VERSION 1.1.1 [2024-2-18]
 ------------------------------------
 

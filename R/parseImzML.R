@@ -149,7 +149,7 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 	extraArrays = NULL, check = ibd, ...)
 {
 	path <- normalizePath(file, mustWork=TRUE)
-	if ( file_ext(path) != "imzML" )
+	if ( tolower(file_ext(path)) != "imzml" )
 		warning("file ", sQuote(path), " does not have '.imzML' extension")
 	if ( !is.null(extra) && !is.character(extra) )
 		stop("'extra' must be a character vector or NULL")

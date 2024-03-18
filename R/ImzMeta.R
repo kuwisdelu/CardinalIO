@@ -264,7 +264,7 @@ setMethod("show", "ImzMeta",
 
 .cvparam <- function(cv, id, name, value)
 {
-	if ( missing(value) ) {
+	if ( missing(value) || is.null(value) ) {
 		setNames(c(cv, id, name), c("cv", "id", "name"))
 	} else {
 		setNames(c(cv, id, name, value), c("cv", "id", "name", "value"))

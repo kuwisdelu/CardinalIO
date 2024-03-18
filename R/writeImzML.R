@@ -58,18 +58,19 @@ setMethod("writeImzML", "ImzMeta",
 			stop("rows of 'positions' does not match columns of 'intensity'")
 		if ( asis ) {
 			# check existing ibd file
-			path_ibd <- normalizePath(path_ibd, mustWork=TRUE)
 			if ( !is.matter(mz) || !is.matter(intensity) )
 				stop("'mz' and 'intensity' must both be matter objects when asis=TRUE")
 			if ( length(path(mz)) != 1L || length(path(intensity)) != 1L )
 				stop("'mz' or 'intensity' are not stored in a single file")
-			if ( path(mz) != path(intensity) )
+			if ( normalizePath(path(mz)) != normalizePath(path(intensity)) )
 				stop("'mz' and 'intensity' are not stored in the same file")
-			if ( path(mz) != path_ibd ) {
-				warning("renaming ibd file from ",
+			if ( normalizePath(path(mz)) != path_ibd ) {
+				message("renaming ibd file from ",
 					sQuote(path(mz)), " to ", sQuote(path_ibd))
 				if ( !file.rename(path(mz), path_ibd) )
 					warning("problem occured while renaming ibd file")
+				path(mz) <- path_ibd
+				path(intensity) <- path_ibd
 			}
 			ibd <- list(mz=mz, intensity=intensity)
 		} else {
@@ -96,7 +97,7 @@ setMethod("writeImzML", "ImzMeta",
 
 .write_imzML <- function(path, metadata)
 {
-	if ( file_ext(path) != "imzML" )
+	if ( tolower(file_ext(path)) != "imzml" )
 		warning("file ", sQuote(path), " does not have '.imzML' extension")
 	if ( file.exists(path) ) {
 		warning("file ", sQuote(path), " already exists and will be overwritten")
@@ -132,7 +133,7 @@ setMethod("writeImzML", "ImzMeta",
 
 .write_ibd <- function(path, mz, intensity, mz.type, intensity.type)
 {
-	if ( file_ext(path) != "ibd" )
+	if ( tolower(file_ext(path)) != "ibd" )
 		warning("file ", sQuote(path), " does not have '.ibd' extension")
 	if ( file.exists(path) ) {
 		warning("file ", sQuote(path), " already exists and will be overwritten")

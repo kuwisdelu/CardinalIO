@@ -14,14 +14,14 @@ test_that("Analyze 7.5 - write/parse", {
 	dim(intensity) <- c(nmz, nx, ny)
 	path <- tempfile(fileext=".hdr")
 
-	success <- writeAnalyze(intensity, path, type="float32", mz=mz)
+	success <- writeAnalyze(intensity, path, type="float32", domain=mz)
 
 	expect_true(success)
 	expect_equal(file.size(path), 348L)
 
 	p <- parseAnalyze(path)
 
-	mz2 <- as.numeric(p$mz)
+	mz2 <- as.numeric(p$t2m)
 	intensity2 <- as.array(p$img)
 
 	expect_equal(mz, mz2, tolerance=1e-5)
