@@ -69,7 +69,7 @@ ImzMeta <- function(...) .new_ImzMeta(...)
 {
 	if ( !is.null(name) ) {
 		obo <- get_obo(obo)
-		ids <- get_descendants(obo, parent_id, exclude_roots=TRUE)
+		ids <- get_descendants(obo, parent_id)
 		names <- obo$name[ids]
 		if ( !all(name %in% names) ) {
 			names <- paste0(sQuote(names), collapse=", ")
