@@ -219,6 +219,8 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 				extra <- lapply(extraArrays,
 					function(ex)
 					{
+						if ( anyNA(ex) )
+							return(NULL)
 						matter_list(path=path_ibd, type=ex[["binary data type"]],
 							offset=as.numeric(ex[["external offset"]]),
 							extent=as.numeric(ex[["external array length"]]),
