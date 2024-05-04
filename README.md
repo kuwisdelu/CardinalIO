@@ -43,7 +43,7 @@ The most cutting edge version of *CardinalIO* can be installed from Github via t
 if (!require("remotes", quietly = TRUE))
     install.packages("remotes")
 
-remotes::github_install("kuwisdelu/CardinalIO")
+remotes::install_github("kuwisdelu/CardinalIO")
 ```
 
 This version is unstable and only recommended for developers.
