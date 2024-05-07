@@ -167,14 +167,25 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 		names(ex) <- names(extraArrays)
 		parse[["run"]][["spectrumList"]][["extraArrays"]] <- ex
 	}
-	if ( ibd || check )
+	check_opts <- c("checksum", "uuid", "filesize")
+	if ( isTRUE(check) ) {
+		check <- check_opts
+	} else if ( isFALSE(check) ) {
+		check <- character()
+	} else {
+		check <- match.arg(check, check_opts, several.ok=TRUE)
+	}
+	if ( ibd || length(check) > 0L )
 	{
+		fileContent <- parse[["fileDescription"]][["fileContent"]]
+		mzArrays <- parse[["run"]][["spectrumList"]][["mzArrays"]]
+		intensityArrays <- parse[["run"]][["spectrumList"]][["intensityArrays"]]
+		extraArrays <- parse[["run"]][["spectrumList"]][["extraArrays"]]
 		path_ibd <- paste0(file_path_sans_ext(path), ".ibd")
 		path_ibd <- normalizePath(path_ibd, mustWork=TRUE)
 		parse[["ibd"]] <- list()
-		if ( check )
+		if ( "checksum" %in% check )
 		{
-			fileContent <- parse[["fileDescription"]][["fileContent"]]
 			chk <- find_descendants_in(fileContent, "IMS:1000009", "ims")
 			if ( length(chk) == 1L ) {
 				chk <- chk[[1L]]
@@ -191,18 +202,38 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 			} else {
 				warning("couldn't determine checksum from imzML file")
 			}
+		}
+		if ( "uuid" %in% check )
+		{
 			fid <- fileContent[["IMS:1000080"]]
-			uuid <- as.raw(matter_vec(path=path_ibd, type="raw", length=16L))
-			fid_clean <- gsub("[^[:alnum:]]", "", fid["value"])
-			if ( !isTRUE(raw2hex(uuid) == tolower(fid_clean)) )
-				warning("'uuid' tag from imzML file [", fid_clean, "] ",
-					"does not match 'uuid' bytes from ibd file [", raw2hex(uuid), "]")
-			parse[["ibd"]][["uuid"]] <- uuid
+			uuid <- matter_vec(path=path_ibd, type="raw", length=16L)
+			uuid <- try(as.raw(uuid), silent=TRUE)
+			if ( is.raw(uuid) ) {
+				fid_clean <- gsub("[^[:alnum:]]", "", fid["value"])
+				if ( !isTRUE(raw2hex(uuid) == tolower(fid_clean)) )
+					warning("'uuid' tag from imzML file [", fid_clean, "] ",
+						"does not match 'uuid' bytes from ibd file [", raw2hex(uuid), "]")
+				parse[["ibd"]][["uuid"]] <- uuid
+			} else {
+				warning("failed to read 'uuid' bytes from ibd file")				
+			}
+		}
+		if ( "filesize" %in% check )
+		{
+			size <- file.size(path_ibd)
+			mz_offset <- as.numeric(mzArrays[["external offset"]])
+			intensity_offset <- as.numeric(intensityArrays[["external offset"]])
+			if ( anyNA(mz_offset) )
+				warning("missing values in binary data array offsets for m/z arrays")
+			if ( anyNA(intensity_offset) )
+				warning("missing values in binary data array offsets for intensity arrays")
+			max_offset <- max(mz_offset, intensity_offset, na.rm=TRUE)
+			if ( max_offset > size )
+				warning("maximum binary data array offset from imzML file [", max_offset, "] ",
+					"is larger than the ibd file size [", size, "]")
 		}
 		if ( ibd )
 		{
-			mzArrays <- parse[["run"]][["spectrumList"]][["mzArrays"]]
-			intensityArrays <- parse[["run"]][["spectrumList"]][["intensityArrays"]]
 			mz <- matter_list(path=path_ibd, type=mzArrays[["binary data type"]],
 				offset=as.numeric(mzArrays[["external offset"]]),
 				extent=as.numeric(mzArrays[["external array length"]]),
@@ -213,7 +244,6 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 				names=row.names(intensityArrays))
 			parse[["ibd"]][["mz"]] <- mz
 			parse[["ibd"]][["intensity"]] <- intensity
-			extraArrays <- parse[["run"]][["spectrumList"]][["extraArrays"]]
 			if ( !is.null(extraArrays) )
 			{
 				extra <- lapply(extraArrays,
