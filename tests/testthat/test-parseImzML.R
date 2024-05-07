@@ -166,3 +166,22 @@ test_that("parseImzML - ibd/extra", {
 
 })
 
+test_that("parseImzML - check", {
+
+	path <- exampleImzMLFile("continuous")
+	tmp <- tempfile()
+	tmp_imzML <- paste0(tmp, ".imzML")
+	tmp_ibd <- paste0(tmp, ".ibd")
+	
+	ok_imzML <- file.copy(path, tmp_imzML)
+	ok_ibd <- file.create(tmp_ibd)
+
+	expect_true(ok_imzML)
+	expect_true(ok_ibd)
+	
+	expect_warning(parseImzML(tmp_imzML, check=TRUE))
+	expect_warning(parseImzML(tmp_imzML, check=c("checksum", "uuid")))
+	expect_warning(parseImzML(tmp_imzML, check="filesize"))
+
+})
+

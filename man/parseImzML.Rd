@@ -26,7 +26,7 @@ parseImzML(file, ibd = FALSE, extra = NULL,
 
     \item{extraArrays}{Additional binary data arrays to parse based on identifying \emph{accession} or \emph{name} cvParam tags.}
 
-    \item{check}{Should the UUID and checksum of the binary data file be checked against the corresponding imzML tags?}
+    \item{check}{Should the UUID, checksum, and size of the binary data file be checked against the corresponding imzML tags and binary data array offsets? This can also be a character vector specifying any combination of "checksum", "uuid", and "filesize" to check.}
 
     \item{\dots}{Not currently used.}
 }
