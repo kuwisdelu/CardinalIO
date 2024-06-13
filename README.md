@@ -4,11 +4,13 @@
 
 This package provides fast and efficient parsing, reading, and writing of imzML files for mass spectrometry imaging experiments.
 
-## Installation
+## User Installation
 
 ### Bioconductor Release
 
 *CardinalIO* can be installed via the *BiocManager* package.
+
+This is the **recommended** installation method.
 
 ```{r install, eval=FALSE}
 if (!require("BiocManager", quietly = TRUE))
@@ -25,6 +27,25 @@ Once installed, *CardinalIO* can be loaded with `library()`:
 library(CardinalIO)
 ```
 
+### Github Release
+
+*CardinalIO* can also be installed via the *remotes* package.
+
+```{r install, eval=FALSE}
+if (!require("remotes", quietly = TRUE))
+    install.packages("remotes")
+
+remotes::install_github("kuwisdelu/CardinalIO", ref=remotes::github_release())
+```
+
+Previous releases can be installed by specifying the exact version.
+
+```{r library, eval=FALSE}
+remotes::install_github("kuwisdelu/CardinalIO@v1.2.1")
+```
+
+## Developer Installation
+
 ### Bioconductor Devel
 
 The Bioconductor development version of *CardinalIO* can also be installed via the *BiocManager* package.
@@ -33,7 +54,9 @@ The Bioconductor development version of *CardinalIO* can also be installed via t
 BiocManager::install("CardinalIO", version="devel")
 ```
 
-This version is unstable and should not be relied on for critical work. However, it is typically more stable than Github version.
+This version is **unstable** and should not be used for critical work. However, it is typically more stable than Github devel.
+
+This version should *typically* pass `R CMD check` without errors.
 
 ### Github Devel
 
@@ -46,7 +69,6 @@ if (!require("remotes", quietly = TRUE))
 remotes::install_github("kuwisdelu/CardinalIO")
 ```
 
-This version is unstable and only recommended for developers.
-
+This version is **unstable** and only recommended for developers. It should not be used for critical work.
 
 
