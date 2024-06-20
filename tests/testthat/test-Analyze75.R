@@ -22,7 +22,7 @@ test_that("Analyze 7.5 - write/parse", {
 	p <- parseAnalyze(path)
 
 	mz2 <- as.numeric(p$t2m)
-	intensity2 <- as.array(p$img)
+	intensity2 <- drop(as.array(p$img))
 
 	expect_equal(mz, mz2, tolerance=1e-5)
 	expect_equal(intensity, intensity2, tolerance=1e-5)
