@@ -65,7 +65,7 @@ setMethod("writeImzML", "ImzMeta",
 			if ( normalizePath(path(mz)) != normalizePath(path(intensity)) )
 				stop("'mz' and 'intensity' are not stored in the same file")
 			if ( normalizePath(path(mz)) != path_ibd ) {
-				message("renaming ibd file from ",
+				warning("renaming ibd file from ",
 					sQuote(path(mz)), " to ", sQuote(path_ibd))
 				if ( !file.rename(path(mz), path_ibd) )
 					warning("problem occured while renaming ibd file")
