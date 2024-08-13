@@ -6,7 +6,7 @@ setGeneric("writeImzML", function(object, ...) standardGeneric("writeImzML"))
 
 setMethod("writeImzML", "ImzML", 
 	function(object, file, positions = NULL, mz = NULL, intensity = NULL,
-		mz.type = "float32", intensity.type = "float32", asis = FALSE, ...)
+		mz.type = "float64", intensity.type = "float32", asis = FALSE, ...)
 	{
 		.write_imzML_and_ibd(object, file=file,
 			positions=positions, mz=mz, intensity=intensity,
