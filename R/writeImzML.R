@@ -27,8 +27,8 @@ setMethod("writeImzML", "ImzMeta",
 		stop("'file' must be a single string")
 	path <- normalizePath(file, mustWork=FALSE)
 	path <- file_path_sans_ext(path)
-	path_imzML <- paste0(path, ".imzML")
-	path_ibd <- paste0(path, ".ibd")
+	path_imzML <- normalizePath(paste0(path, ".imzML"), mustWork=FALSE)
+	path_ibd <- normalizePath(paste0(path, ".ibd"), mustWork=FALSE)
 	# process positions
 	if ( !is.null(positions) )
 	{
@@ -65,8 +65,10 @@ setMethod("writeImzML", "ImzMeta",
 			if ( normalizePath(path(mz)) != normalizePath(path(intensity)) )
 				stop("'mz' and 'intensity' are not stored in the same file")
 			if ( normalizePath(path(mz)) != path_ibd ) {
-				warning("renaming ibd file from ",
+				message("renaming ibd file from ",
 					sQuote(path(mz)), " to ", sQuote(path_ibd))
+				if ( file.exists(path_ibd) )
+					warning("overwriting file at ", sQuote(path_ibd))
 				if ( !file.rename(path(mz), path_ibd) )
 					warning("problem occured while renaming ibd file")
 				path(mz) <- path_ibd
