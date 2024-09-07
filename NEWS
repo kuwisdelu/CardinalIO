@@ -1,4 +1,13 @@
 
+CHANGES IN VERSION 1.3.4 [2024-9-7]
+------------------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Parse imzML "binary data compression type" tags
+    o Compressed ibd data arrays are now attached as
+        raw byte arrays (_without_ decompression)
+
 CHANGES IN VERSION 1.3.3 [2024-8-13]
 ------------------------------------
 
