@@ -35,6 +35,8 @@ parseImzML(file, ibd = FALSE, extra = NULL,
     The parse imzML file is returned as a \code{ImzML} object, which is a list-like structure that can be travered via the standard \code{$}, \code{"["}, and \code{"[["} operators. Child nodes that contain cvParams and userParams will be \code{imzplist} objects which are also list-like structures that can be traversed the same way.
 
     The spectrum-level metadata is an exception and will be read in selectively and represented as \code{data.frame}s where each row contains the metadata for a specific spectrum. Metadata for \code{positions}, \code{mzArrays}, and \code{intensityArrays} will be parsed. These will be available in \code{$run$spectrumList}.
+
+    If \code{ibd=TRUE}, the binary data arrays are attached as out-of-memory \code{\link{matter_list}} objects. Uncompressed data arrays are attached as their native binary data types. Compressed data arrays are attached as raw byte arrays.
 }
 
 \value{

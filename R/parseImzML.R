@@ -234,14 +234,30 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 		}
 		if ( ibd )
 		{
-			mz <- matter_list(path=path_ibd, type=mzArrays[["binary data type"]],
-				offset=as.numeric(mzArrays[["external offset"]]),
-				extent=as.numeric(mzArrays[["external array length"]]),
-				names=row.names(mzArrays))
-			intensity <- matter_list(path=path_ibd, type=intensityArrays[["binary data type"]],
-				offset=as.numeric(intensityArrays[["external offset"]]),
-				extent=as.numeric(intensityArrays[["external array length"]]),
-				names=row.names(intensityArrays))
+			mzCompression <- mzArrays[["binary data compression type"]]
+			if ( isTRUE(all(mzCompression == "no compression")) ) {
+				mz <- matter_list(path=path_ibd, type=mzArrays[["binary data type"]],
+					offset=as.numeric(mzArrays[["external offset"]]),
+					extent=as.numeric(mzArrays[["external array length"]]),
+					names=row.names(mzArrays))
+			} else {
+				mz <- matter_list(path=path_ibd, type="raw",
+					offset=as.numeric(mzArrays[["external offset"]]),
+					extent=as.numeric(mzArrays[["external encoded length"]]),
+					names=row.names(mzArrays))
+			}
+			intensityCompression <- intensityArrays[["binary data compression type"]]
+			if ( isTRUE(all(intensityCompression == "no compression")) ) {
+				intensity <- matter_list(path=path_ibd, type=intensityArrays[["binary data type"]],
+					offset=as.numeric(intensityArrays[["external offset"]]),
+					extent=as.numeric(intensityArrays[["external array length"]]),
+					names=row.names(intensityArrays))
+			} else {
+				intensity <- matter_list(path=path_ibd, type="raw",
+					offset=as.numeric(intensityArrays[["external offset"]]),
+					extent=as.numeric(intensityArrays[["external encoded length"]]),
+					names=row.names(intensityArrays))
+			}
 			parse[["ibd"]][["mz"]] <- mz
 			parse[["ibd"]][["intensity"]] <- intensity
 			if ( !is.null(extraArrays) )
@@ -251,10 +267,18 @@ parseImzML <- function(file, ibd = FALSE, extra = NULL,
 					{
 						if ( anyNA(ex) )
 							return(NULL)
-						matter_list(path=path_ibd, type=ex[["binary data type"]],
-							offset=as.numeric(ex[["external offset"]]),
-							extent=as.numeric(ex[["external array length"]]),
-							names=row.names(ex))
+						exCompression <- ex[["binary data compression type"]]
+						if ( isTRUE(all(exCompression == "no compression")) ) {
+							matter_list(path=path_ibd, type=ex[["binary data type"]],
+								offset=as.numeric(ex[["external offset"]]),
+								extent=as.numeric(ex[["external array length"]]),
+								names=row.names(ex))
+						} else {
+							matter_list(path=path_ibd, type="raw",
+								offset=as.numeric(ex[["external offset"]]),
+								extent=as.numeric(ex[["external encoded length"]]),
+								names=row.names(ex))
+						}
 					})
 				parse[["ibd"]][["extra"]] <- extra
 			}

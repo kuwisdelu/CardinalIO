@@ -26,6 +26,8 @@
 #define IMS_16_BIT_INTEGER_ID			"IMS:1100001"
 #define IMS_32_BIT_INTEGER_ID			"IMS:1000141" // obselete (included for compatibility)
 #define IMS_64_BIT_INTEGER_ID			"IMS:1000142" // obselete (included for compatibility)
+#define MS_NO_COMPRESSION				"MS:1000576"
+#define MS_ZLIB_COMPRESSION				"MS:1000574"
 
 // define required cvParam names
 #define IMS_POSITION_X_NAME 				"position x"
@@ -697,20 +699,22 @@ class imzML {
 		SEXP get_spectrum_arrays(const char * id)
 		{
 			int nr = num_spectra();
-			int nc = 4; // offset, length, encoded length, type
-			SEXP dataArrays, dataArraysNames, poff, plen, pxlen, ptype;
+			int nc = 5; // offset, length, encoded length, type, compression
+			SEXP dataArrays, dataArraysNames, poff, plen, pxlen, ptype, pcmp;
 			PROTECT(dataArrays = Rf_allocVector(VECSXP, nc));
 			PROTECT(dataArraysNames = Rf_allocVector(STRSXP, nc));
 			PROTECT(poff = Rf_allocVector(STRSXP, nr));
 			PROTECT(plen = Rf_allocVector(STRSXP, nr));
 			PROTECT(pxlen = Rf_allocVector(STRSXP, nr));
 			PROTECT(ptype = Rf_allocVector(STRSXP, nr));
+			PROTECT(pcmp = Rf_allocVector(STRSXP, nr));
 			SET_STRING_ELT(dataArraysNames, 0, Rf_mkChar("external offset"));
 			SET_STRING_ELT(dataArraysNames, 1, Rf_mkChar("external array length"));
 			SET_STRING_ELT(dataArraysNames, 2, Rf_mkChar("external encoded length"));
 			SET_STRING_ELT(dataArraysNames, 3, Rf_mkChar("binary data type"));
+			SET_STRING_ELT(dataArraysNames, 4, Rf_mkChar("binary data compression type"));
 			pugi::xml_node spectrum = first_spectrum();
-			pugi::xml_node dataArray, off, len, xlen, type;
+			pugi::xml_node dataArray, off, len, xlen, type, cmp;
 			int i = 0;
 			while ( spectrum && i < nr ) {
 				// safe check for interrupt (allow xml destructor to run)
@@ -732,10 +736,14 @@ class imzML {
 				else if ( (type = find_param(dataArray, "cvParam", "accession", IMS_32_BIT_INTEGER_ID)) ) {}
 				else if ( (type = find_param(dataArray, "cvParam", "accession", IMS_64_BIT_INTEGER_ID)) ) {}
 				else {}
+				cmp = find_param(dataArray, "cvParam", "accession", MS_NO_COMPRESSION);
+				if ( !cmp )
+					cmp = find_param(dataArray, "cvParam", "accession", MS_ZLIB_COMPRESSION);
 				SET_STRING_ELT(poff, i, mkCharOrNA(off.attribute("value").value()));
 				SET_STRING_ELT(plen, i, mkCharOrNA(len.attribute("value").value()));
 				SET_STRING_ELT(pxlen, i, mkCharOrNA(xlen.attribute("value").value()));
 				SET_STRING_ELT(ptype, i, mkCharOrNA(type.attribute("name").value()));
+				SET_STRING_ELT(pcmp, i, mkCharOrNA(cmp.attribute("name").value()));
 				spectrum = spectrum.next_sibling();
 				i++;
 			}
@@ -743,10 +751,11 @@ class imzML {
 			SET_VECTOR_ELT(dataArrays, 1, plen);
 			SET_VECTOR_ELT(dataArrays, 2, pxlen);
 			SET_VECTOR_ELT(dataArrays, 3, ptype);
+			SET_VECTOR_ELT(dataArrays, 4, pcmp);
 			Rf_setAttrib(dataArrays, R_NamesSymbol, dataArraysNames);
 			Rf_setAttrib(dataArrays, R_RowNamesSymbol, get_spectrum_ids());
 			Rf_setAttrib(dataArrays, R_ClassSymbol, Rf_mkString("data.frame"));
-			UNPROTECT(6);
+			UNPROTECT(7);
 			return dataArrays;
 		}
 
