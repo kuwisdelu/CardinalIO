@@ -5,6 +5,8 @@ import("matter")
 
 import("ontologyIndex")
 
+import("BiocParallel")
+
 import("S4Vectors")
 
 importFrom("stats", "setNames")

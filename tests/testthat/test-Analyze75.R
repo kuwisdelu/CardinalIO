@@ -5,6 +5,8 @@ context("Analyze 7.5")
 
 test_that("Analyze 7.5 - write/parse", {
 
+	register(SerialParam())
+
 	set.seed(2023)
 	nx <- 3
 	ny <- 3
@@ -27,5 +29,5 @@ test_that("Analyze 7.5 - write/parse", {
 	expect_equal(mz, mz2, tolerance=1e-5)
 	expect_equal(intensity, intensity2, tolerance=1e-5)
 	expect_equal(nrow(intensity), nrow(intensity2))
-	
+
 })

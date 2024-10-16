@@ -13,13 +13,13 @@
 
 \usage{
 \S4method{writeAnalyze}{array}(object, file, positions = NULL, domain = NULL,
-    type = "float32", \dots)
+    type = "float32", \dots, BPPARAM = bpparam())
 
 \S4method{writeAnalyze}{matter_arr}(object, file, positions = NULL, domain = NULL,
-    type = "float32", \dots)
+    type = "float32", \dots, BPPARAM = bpparam())
 
 \S4method{writeAnalyze}{sparse_arr}(object, file, positions = NULL, domain = NULL,
-    type = "float32", \dots)
+    type = "float32", \dots, BPPARAM = bpparam())
 }
 
 \arguments{
@@ -33,7 +33,9 @@
 
     \item{type}{The data type using for writing the ".img" file. Allowed values are "int16", "int32", "float32", and "float64".}
 
-    \item{\dots}{Not currently used.}
+    \item{\dots}{Additional arguments passed to \code{\link{chunk_colapply}}.}
+
+    \item{BPPARAM}{An optional instance of \code{BiocParallelParam}. See documentation for \code{\link{bplapply}}.}
 }
 
 \details{

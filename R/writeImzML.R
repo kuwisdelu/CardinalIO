@@ -6,22 +6,26 @@ setGeneric("writeImzML", function(object, ...) standardGeneric("writeImzML"))
 
 setMethod("writeImzML", "ImzML", 
 	function(object, file, positions = NULL, mz = NULL, intensity = NULL,
-		mz.type = "float64", intensity.type = "float32", asis = FALSE, ...)
+		mz.type = "float64", intensity.type = "float32", asis = FALSE, ...,
+		BPPARAM = bpparam())
 	{
 		.write_imzML_and_ibd(object, file=file,
 			positions=positions, mz=mz, intensity=intensity,
-			mz.type=mz.type, intensity.type=intensity.type, asis=asis)
+			mz.type=mz.type, intensity.type=intensity.type, asis=asis,
+			BPPARAM=BPPARAM, ...)
 	})
 
 setMethod("writeImzML", "ImzMeta", 
-	function(object, file, positions, mz, intensity, ...)
+	function(object, file, positions, mz, intensity, ...,
+		BPPARAM = bpparam())
 	{
 		writeImzML(as(object, "ImzML"), file=file,
-			positions=positions, mz=mz, intensity=intensity, ...)
+			positions=positions, mz=mz, intensity=intensity,
+			BPPARAM=BPPARAM, ...)
 	})
 
 .write_imzML_and_ibd <- function(object, file, positions,
-	mz, intensity, mz.type, intensity.type, asis)
+	mz, intensity, mz.type, intensity.type, asis, ..., BPPARAM)
 {
 	if ( !is.character(file) || length(file) != 1L )
 		stop("'file' must be a single string")
@@ -81,7 +85,8 @@ setMethod("writeImzML", "ImzMeta",
 			mz.type <- match.arg(mz.type, allowed_types)
 			intensity.type <- match.arg(intensity.type, allowed_types)
 			ibd <- .write_ibd(path_ibd, mz=mz, intensity=intensity,
-				mz.type=mz.type, intensity.type=intensity.type)
+				mz.type=mz.type, intensity.type=intensity.type, ...,
+				BPPARAM=BPPARAM)
 		}
 		# set ibd metadata
 		object <- .set_ibd_metadata_from_matter(object, ibd$mz, ibd$intensity)
@@ -133,7 +138,7 @@ setMethod("writeImzML", "ImzMeta",
 	.Call(C_writeImzML, mzML, positions, mzArrays, intensityArrays, path)
 }
 
-.write_ibd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_ibd <- function(path, mz, intensity, mz.type, intensity.type, ..., BPPARAM)
 {
 	if ( tolower(file_ext(path)) != "ibd" )
 		warning("file ", sQuote(path), " does not have '.ibd' extension")
@@ -143,17 +148,17 @@ setMethod("writeImzML", "ImzMeta",
 			warning("problem overwriting file ", sQuote(path))
 	}
 	if ( is.numeric(mz) ) {
-		.write_continuous_ibd(path, mz, intensity, mz.type, intensity.type)
+		.write_continuous_ibd(path, mz, intensity,
+			mz.type, intensity.type, ..., BPPARAM=BPPARAM)
 	} else {
-		.write_processed_ibd(path, mz, intensity, mz.type, intensity.type)
+		.write_processed_ibd(path, mz, intensity,
+			mz.type, intensity.type, ..., BPPARAM=BPPARAM)
 	}
 }
 
-.write_continuous_ibd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_continuous_ibd <- function(path, mz, intensity,
+	mz.type, intensity.type, ..., BPPARAM)
 {
-	mz <- as.numeric(mz)
-	intensity <- as.matrix(intensity)
-	n <- ncol(intensity)
 	# check array extents
 	if ( nrow(intensity) != length(mz) )
 		stop("length of 'mz' does not match rows of 'intensity' matrix")
@@ -161,18 +166,31 @@ setMethod("writeImzML", "ImzMeta",
 	id <- uuid(uppercase=FALSE)
 	uuid <- matter_vec(id$bytes, path=path, type="raw", readonly=FALSE)
 	# write m/z array
-	mz <- matter_vec(mz, path=path, type=mz.type, append=TRUE)
+	mz.out <- matter_vec(as.numeric(mz),
+		path=path, type=mz.type, append=TRUE)
 	# write intensity arrays
-	intensity <- matter_mat(intensity, path=path, type=intensity.type, append=TRUE)
+	BPPARAM <- bplocalized(BPPARAM)
+	intensity.out <- matter_mat(NULL,
+		nrow=nrow(intensity), ncol=ncol(intensity),
+		path=path, type=intensity.type, append=TRUE)
+	pid <- ipcid()
+	FUN <- isofun(function(src, dest, id) {
+		i <- attr(src, "index")
+		BiocParallel::ipclock(id)
+		dest[,i] <- src
+		BiocParallel::ipcunlock(id)
+	})
+	chunk_colapply(intensity, FUN,
+		dest=intensity.out, id=pid, ...,
+		BPPARAM=BPPARAM)
+	ipcremove(pid)
 	# return metadata
-	list(uuid=uuid, mz=mz, intensity=intensity)
+	list(uuid=uuid, mz=mz.out, intensity=intensity.out)
 }
 
-.write_processed_ibd <- function(path, mz, intensity, mz.type, intensity.type)
+.write_processed_ibd <- function(path, mz, intensity,
+	mz.type, intensity.type, ..., BPPARAM)
 {
-	mz <- as.list(mz)
-	intensity <- as.list(intensity)
-	n <- length(intensity)
 	# check array extents
 	if ( length(mz) != length(intensity) )
 		stop("length of 'mz' and 'intensity' do not match")
@@ -181,22 +199,32 @@ setMethod("writeImzML", "ImzMeta",
 	# write uuid
 	id <- uuid(uppercase=FALSE)
 	uuid <- matter_vec(id$bytes, path=path, type="raw", readonly=FALSE)
-	# construct combined m/z and intensity arrays
-	ind1 <- seq(1L, 2 * n - 1L, by=2L)
-	ind2 <- seq(2L, 2 * n, by=2L)
-	arrays <- vector("list", length=2 * n)
-	for ( i in seq_len(n) )
-	{
-		arrays[[ind1[[i]]]] <- mz[[i]]
-		arrays[[ind2[[i]]]] <- intensity[[i]]
-	}
-	types <- rep_len(c(mz.type, intensity.type), 2 * n)
-	# write combined m/z and intensity arrays
-	arrays <- matter_list(arrays, path=path, type=types, append=TRUE)
-	mz <- arrays[ind1,drop=NULL]
-	intensity <- arrays[ind2,drop=NULL]
+	# write m/z and intensity arrays
+	BPPARAM <- bplocalized(BPPARAM)
+	n <- length(intensity)
+	ind1 <- seq(1L, 2L * n - 1L, by=2L)
+	ind2 <- seq(2L, 2L * n, by=2L)
+	types <- rep_len(c(mz.type, intensity.type), 2L * n)
+	lengths <- rep(lengths(intensity), each=2L)
+	ibd.out <- matter_list(NULL,
+		path=path, type=types, lengths=lengths, append=TRUE)
+	mz.out <- ibd.out[ind1,drop=NULL]
+	intensity.out <- ibd.out[ind2,drop=NULL]
+	pid <- ipcid()
+	FUN <- isofun(function(src1, src2, MoreArgs) {
+		i <- attr(src1, "index")
+		BiocParallel::ipclock(MoreArgs$id)
+		MoreArgs$dest1[i] <- src1
+		MoreArgs$dest2[i] <- src2
+		BiocParallel::ipcunlock(MoreArgs$id)
+	})
+	MoreArgs <- list(dest1=mz.out, dest2=intensity.out, id=pid)
+	chunk_mapply(FUN, mz, intensity,
+		MoreArgs=MoreArgs, ...,
+		BPPARAM=BPPARAM)
+	ipcremove(pid)
 	# return metadata
-	list(uuid=uuid, mz=mz, intensity=intensity)
+	list(uuid=uuid, mz=mz.out, intensity=intensity.out)
 }
 
 .get_ibd_metadata_from_matter <- function(mz, intensity, algo = "sha1")

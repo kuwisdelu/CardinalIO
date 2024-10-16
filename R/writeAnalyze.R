@@ -6,29 +6,32 @@ setGeneric("writeAnalyze", function(object, ...) standardGeneric("writeAnalyze")
 
 setMethod("writeAnalyze", "array", 
 	function(object, file, positions = NULL, domain = NULL,
-		type = "float32", ...)
+		type = "float32", ..., BPPARAM = bpparam())
 	{
 		.write_Analyze75(object, file=file,
-			positions=positions, domain=domain, type=type)
+			positions=positions, domain=domain, type=type,
+			BPPARAM=BPPARAM, ...)
 	})
 
 setMethod("writeAnalyze", "matter_arr", 
 	function(object, file, positions = NULL, domain = NULL,
-		type = "float32", ...)
+		type = "float32", ..., BPPARAM = bpparam())
 	{
 		.write_Analyze75(object, file=file,
-			positions=positions, domain=domain, type=type)
+			positions=positions, domain=domain, type=type,
+			BPPARAM=BPPARAM, ...)
 	})
 
 setMethod("writeAnalyze", "sparse_arr", 
 	function(object, file, positions = NULL, domain = NULL,
-		type = "float32", ...)
+		type = "float32", ..., BPPARAM = bpparam())
 	{
 		.write_Analyze75(object, file=file,
-			positions=positions, domain=domain, type=type)
+			positions=positions, domain=domain, type=type,
+			BPPARAM=BPPARAM, ...)
 	})
 
-.write_Analyze75 <- function(x, file, positions, domain, type)
+.write_Analyze75 <- function(x, file, positions, domain, type, ..., BPPARAM)
 {
 	if ( is.null(positions) ) {
 		if ( length(dim(x)) < 3L )
@@ -59,7 +62,7 @@ setMethod("writeAnalyze", "sparse_arr",
 		if ( !file.create(path_img) )
 			warning("problem overwriting file ", sQuote(path_img))
 	}
-	img <- .set_Analyze75_image(path_img, x, positions, type)
+	img <- .set_Analyze75_image(path_img, x, positions, type, ..., BPPARAM=BPPARAM)
 	if ( !missing(domain) && !is.null(domain) ) {
 		domain <- as.double(domain)
 		if ( file.exists(path_t2m) ) {
@@ -113,15 +116,25 @@ setMethod("writeAnalyze", "sparse_arr",
 	hdr
 }
 
-.set_Analyze75_image <- function(path, x, positions, type)
+.set_Analyze75_image <- function(path, x, positions, type, ..., BPPARAM)
 {
 	if ( ncol(x) != nrow(positions) )
 		stop("extent of array does not match number of positions")
 	dim <- vapply(positions, max, numeric(1L))
 	img <- matter_mat(0, nrow=nrow(x), ncol=prod(dim),
 		path=path, type=type, readonly=FALSE)
-	index <- linear_ind(as.matrix(positions), dim)
-	for ( i in seq_along(index) )
-		img[,index[i]] <- x[,i]
+	lind <- linear_ind(as.matrix(positions), dim)
+	BPPARAM <- bplocalized(BPPARAM)
+	pid <- ipcid()
+	FUN <- isofun(function(src, dest, lind, id) {
+		i <- attr(src, "index")
+		BiocParallel::ipclock(id)
+		dest[,lind[i]] <- src
+		BiocParallel::ipcunlock(id)
+	})
+	chunk_colapply(x, FUN,
+		dest=img, lind=lind, id=pid, ...,
+		BPPARAM=BPPARAM)
+	ipcremove(pid)
 	img
 }

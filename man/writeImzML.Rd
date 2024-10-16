@@ -12,9 +12,11 @@
 
 \usage{
 \S4method{writeImzML}{ImzML}(object, file, positions = NULL, mz = NULL, intensity = NULL,
-    mz.type = "float64", intensity.type = "float32", asis = FALSE, \dots)
+    mz.type = "float64", intensity.type = "float32", asis = FALSE, \dots,
+    BPPARAM = bpparam())
 
-\S4method{writeImzML}{ImzMeta}(object, file, positions, mz, intensity, \dots)
+\S4method{writeImzML}{ImzMeta}(object, file, positions, mz, intensity, \dots,
+    BPPARAM = bpparam())
 }
 
 \arguments{
@@ -32,7 +34,9 @@
 
     \item{asis}{If \code{TRUE} and \code{mz} and \code{intensity} are both file-backed \code{\link{matter}} objects, then they are only used to infer the binary metadata for writing the ".imzML" file, and the ".ibd" is \emph{not} written.}
 
-    \item{\dots}{Arguments passed to the \code{ImzML} method.}
+    \item{\dots}{Additional arguments passed to \code{\link{chunk_colapply}} or \code{\link{chunk_mapply}}.}
+
+    \item{BPPARAM}{An optional instance of \code{BiocParallelParam}. See documentation for \code{\link{bplapply}}.}
 }
 
 \details{
