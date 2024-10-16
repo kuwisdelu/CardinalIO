@@ -91,15 +91,17 @@ setMethod("writeImzML", "ImzMeta",
 		# set ibd metadata
 		object <- .set_ibd_metadata_from_matter(object, ibd$mz, ibd$intensity)
 		outpath <- c(path_imzML, path_ibd)
+		outdata <- SimpleList(ibd)
 	} else {
 		if ( !is.null(mz) || !is.null(intensity) )
 			warning("'mz' and 'intensity' must both be specified")
 		outpath <- path_imzML
+		outdata <- NULL
 	}
 	# write imzML
 	success <- .write_imzML(path_imzML, metadata=object)
 	outpath <- normalizePath(outpath, mustWork=TRUE)
-	structure(success, outpath=outpath)
+	structure(success, outpath=outpath, outdata=outdata)
 }
 
 .write_imzML <- function(path, metadata)

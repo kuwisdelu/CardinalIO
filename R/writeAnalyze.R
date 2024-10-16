@@ -72,10 +72,12 @@ setMethod("writeAnalyze", "sparse_arr",
 		}
 		t2m <- matter_vec(domain, path=path_t2m, type="float32", readonly=FALSE)
 		outpath <- c(path_hdr, path_img, path_t2m)
+		outdata <- SimpleList(hdr=hdr, t2m=t2m, img=img)
 	} else {
 		outpath <- c(path_hdr, path_img)
+		outdata <- SimpleList(hdr=hdr, img=img)
 	}
-	structure(TRUE, outpath=outpath)
+	structure(TRUE, outpath=outpath, outdata=outdata)
 }
 
 .set_Analyze75_header <- function(path, dim, type)

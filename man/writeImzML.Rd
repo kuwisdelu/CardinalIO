@@ -46,7 +46,7 @@
 }
 
 \value{
-	\code{TRUE} if the file was successfully written; \code{FALSE} otherwise. This return value should be checked to make sure the operation completed, as most failure cases will yield warnings rather than errors. The output file paths are attached as attributes.
+	\code{TRUE} if the file was successfully written; \code{FALSE} otherwise. This return value should be checked to make sure the operation completed, as most failure cases will yield warnings rather than errors. The output file paths and metadata are attached as attributes.
 }
 
 \author{Kylie A. Bemis}

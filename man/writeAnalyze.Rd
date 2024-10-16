@@ -43,7 +43,7 @@
 }
 
 \value{
-    \code{TRUE} if the file was successfully written; \code{FALSE} otherwise. The output file paths are attached as attributes.
+    \code{TRUE} if the file was successfully written; \code{FALSE} otherwise. The output file paths and metadata are attached as attributes.
 }
 
 \author{Kylie A. Bemis}
