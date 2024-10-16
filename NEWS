@@ -1,5 +1,5 @@
 
-CHANGES IN VERSION 1.3.5 [2024-10-15]
+CHANGES IN VERSION 1.3.5 [2024-10-16]
 ------------------------------------
 
 NEW FEATURES
@@ -7,6 +7,13 @@ NEW FEATURES
     o Support for parallel writing with BiocParallel
     o Added 'BPPARAM' argument to 'writeAnalyze()'
     o Added 'BPPARAM' argument to 'writeImzML()'
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Return 'outdata' attribute on 'writeAnalyze()'
+        results with output 'matter' object
+    o Return 'outdata' attribute on 'writeImzML()'
+        results with output 'matter' object
 
 CHANGES IN VERSION 1.3.4 [2024-9-7]
 ------------------------------------
