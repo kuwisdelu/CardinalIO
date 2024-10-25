@@ -1,4 +1,12 @@
 
+CHANGES IN VERSION 1.2.2 [2024-10-24]
+------------------------------------
+
+BUG FIXES
+
+    o Fix writing scientific notation to imzML output
+        (note: only affected parsing, not precision)
+
 CHANGES IN VERSION 1.2.1 [2024-5-7]
 ------------------------------------
 
