@@ -2,8 +2,6 @@
 #### Analyze75 class ####
 ## -----------------------
 
-setClass("Analyze75", contains = "SimpleList")
-
 # no public constructor (get from parseAnalyze)
 
 # construct new Analyze75 from arguments

@@ -2,8 +2,6 @@
 #### ImzMeta class ####
 ## --------------------
 
-setClass("ImzMeta", contains = "SimpleList")
-
 ImzMeta <- function(...) .new_ImzMeta(...)
 
 .meta_ms_tags <- list(
@@ -90,12 +88,12 @@ ImzMeta <- function(...) .new_ImzMeta(...)
 	if ( !all(cls_ok) )
 		errors <- c(errors , "all tags must be character or NULL")
 	ms_tags_to_check <- intersect(.get_cv_meta_ms_tagnames(), names(object))
-	ims_tags_to_check <- intersect(.get_cv_meta_ims_tagnames(), names(object))
 	ms_tag_problems <- unlist(Map(.check_tag,
 		tag=ms_tags_to_check,
 		name=as.list(object)[ms_tags_to_check],
 		parent_id=.get_all_meta_tags()[ms_tags_to_check],
 		obo="ms"))
+	ims_tags_to_check <- intersect(.get_cv_meta_ims_tagnames(), names(object))
 	ims_tag_problems <- unlist(Map(.check_tag,
 		tag=ims_tags_to_check,
 		name=as.list(object)[ims_tags_to_check],
@@ -152,8 +150,6 @@ setReplaceMethod("[[", "ImzMeta",
 		if ( validObject(x) )
 			x
 	})
-
-setClassUnion("character_OR_NULL", c("character", "NULL"))
 
 # needed to make [[<-, etc. work
 setAs("list", "ImzMeta", function(from) {
